@@ -28,6 +28,7 @@ public final class RNSBottomSheetHostingView: UIView {
   private var pendingIndex: Int?
   private var hasLaidOut = false
   private var isPanning = false
+  private var isContentInteractionDisabled = false
 
   public override init(frame: CGRect) {
     super.init(frame: frame)
@@ -40,6 +41,9 @@ public final class RNSBottomSheetHostingView: UIView {
 
     panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
     panGesture.delegate = self
+    panGesture.cancelsTouchesInView = true
+    panGesture.delaysTouchesBegan = true
+    panGesture.delaysTouchesEnded = true
     sheetContainer.addGestureRecognizer(panGesture)
   }
 
@@ -166,6 +170,17 @@ public final class RNSBottomSheetHostingView: UIView {
     displayLink = nil
   }
 
+  private func setContentInteractionEnabled(_ isEnabled: Bool) {
+    if isContentInteractionDisabled == !isEnabled {
+      return
+    }
+
+    for subview in sheetContainer.subviews {
+      subview.isUserInteractionEnabled = isEnabled
+    }
+    isContentInteractionDisabled = !isEnabled
+  }
+
   @objc private func displayLinkFired() {
     emitPosition()
   }
@@ -194,6 +209,7 @@ public final class RNSBottomSheetHostingView: UIView {
       self.stopDisplayLink()
       self.emitPosition()
       self.activeAnimator = nil
+      self.setContentInteractionEnabled(true)
       self.eventDelegate?.bottomSheetHostingView(self, didChangeIndex: index)
     }
     animator.startAnimation()
@@ -207,6 +223,7 @@ public final class RNSBottomSheetHostingView: UIView {
     switch gesture.state {
     case .began:
       isPanning = true
+      setContentInteractionEnabled(false)
       gesture.setTranslation(.zero, in: self)
       if let animator = activeAnimator {
         stopDisplayLink()
@@ -234,6 +251,7 @@ public final class RNSBottomSheetHostingView: UIView {
 
     case .failed:
       isPanning = false
+      setContentInteractionEnabled(true)
 
     default:
       break
@@ -291,6 +309,19 @@ public final class RNSBottomSheetHostingView: UIView {
 }
 
 extension RNSBottomSheetHostingView: UIGestureRecognizerDelegate {
+  public func gestureRecognizer(
+    _ gestureRecognizer: UIGestureRecognizer,
+    shouldRequireFailureOf other: UIGestureRecognizer
+  ) -> Bool {
+    guard gestureRecognizer === panGesture else { return false }
+
+    if other is UITapGestureRecognizer {
+      return true
+    }
+
+    return false
+  }
+
   public func gestureRecognizer(
     _ gestureRecognizer: UIGestureRecognizer,
     shouldBeRequiredToFailBy other: UIGestureRecognizer
