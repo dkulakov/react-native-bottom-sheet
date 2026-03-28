@@ -92,6 +92,12 @@ using namespace facebook::react;
   }
 }
 
+- (void)prepareForRecycle
+{
+  [super prepareForRecycle];
+  [_sheetView resetSheetState];
+}
+
 @end
 
 Class<RCTComponentViewProtocol> BottomSheetViewCls(void)

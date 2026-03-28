@@ -408,8 +408,19 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
   fun destroy() {
     activeAnimation?.cancel()
+    activeAnimation = null
     stopChoreographer()
     velocityTracker?.recycle()
     velocityTracker = null
+    detentSpecs = emptyList()
+    targetIndex = 0
+    pendingIndex = null
+    hasLaidOut = false
+    isPanning = false
+    initialTouchY = 0f
+    lastTouchY = 0f
+    activePointerId = MotionEvent.INVALID_POINTER_ID
+    sheetContainer.translationY = 0f
+    sheetContainer.removeAllViews()
   }
 }

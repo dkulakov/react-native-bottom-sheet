@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setDetentIndex:(NSInteger)newIndex;
 - (void)mountChildComponentView:(UIView *)childView atIndex:(NSInteger)index;
 - (void)unmountChildComponentView:(UIView *)childView;
+- (void)resetSheetState;
 
 @end
 

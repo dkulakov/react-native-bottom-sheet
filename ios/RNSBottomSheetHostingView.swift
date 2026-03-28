@@ -132,6 +132,22 @@ public final class RNSBottomSheetHostingView: UIView {
     childView.removeFromSuperview()
   }
 
+  public func resetSheetState() {
+    activeAnimator?.stopAnimation(true)
+    activeAnimator = nil
+    stopDisplayLink()
+    detentSpecs = []
+    targetIndex = 0
+    pendingIndex = nil
+    hasLaidOut = false
+    isPanning = false
+    setContentInteractionEnabled(true)
+    sheetContainer.transform = .identity
+    for subview in sheetContainer.subviews {
+      subview.removeFromSuperview()
+    }
+  }
+
   private func detent(at index: Int) -> DetentSpec {
     guard detentSpecs.indices.contains(index) else {
       return DetentSpec(height: 0, programmatic: false)

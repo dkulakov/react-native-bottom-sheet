@@ -60,6 +60,11 @@
   [_impl unmountChildComponentView:childView];
 }
 
+- (void)resetSheetState
+{
+  [_impl resetSheetState];
+}
+
 - (void)bottomSheetHostingView:(RNSBottomSheetHostingView *)view didChangeIndex:(NSInteger)index
 {
   [self.delegate bottomSheetView:self didChangeIndex:index];
