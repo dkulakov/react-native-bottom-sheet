@@ -362,8 +362,10 @@ public final class RNSBottomSheetHostingView: UIView {
       return false
     }
 
-    let scrollAtTop = (firstScrollView(in: sheetContainer)?.contentOffset.y ?? 0) <= 0
-    return scrollAtTop
+    guard let scrollView = firstScrollView(in: sheetContainer) else { return true }
+    let locationInScroll = panGesture.location(in: scrollView)
+    guard scrollView.bounds.contains(locationInScroll) else { return true }
+    return scrollView.contentOffset.y <= 0
   }
 }
 

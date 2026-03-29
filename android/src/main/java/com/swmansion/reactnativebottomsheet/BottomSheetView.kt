@@ -425,7 +425,21 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
   private fun isScrollViewAtTop(): Boolean {
     val scrollView = findScrollView(sheetContainer) ?: return true
+    if (!isTouchInsideView(scrollView)) return true
     return !scrollView.canScrollVertically(-1)
+  }
+
+  private fun isTouchInsideView(target: View): Boolean {
+    val targetLocation = IntArray(2)
+    target.getLocationOnScreen(targetLocation)
+    val myLocation = IntArray(2)
+    getLocationOnScreen(myLocation)
+    val touchScreenX = myLocation[0] + initialTouchX
+    val touchScreenY = myLocation[1] + initialTouchY
+    return touchScreenX >= targetLocation[0] &&
+      touchScreenX < targetLocation[0] + target.width &&
+      touchScreenY >= targetLocation[1] &&
+      touchScreenY < targetLocation[1] + target.height
   }
 
   private fun findScrollView(view: View): View? {
