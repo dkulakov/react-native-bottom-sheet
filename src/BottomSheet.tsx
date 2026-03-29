@@ -77,7 +77,6 @@ export const BottomSheet = ({
 
   const clampedIndex = Math.max(0, Math.min(index, resolvedDetents.length - 1));
   const isCollapsed = (resolvedDetents[clampedIndex]?.height ?? 0) === 0;
-  const sheetPointerEvents = isCollapsed ? 'none' : 'box-none';
   const scrimPressEnabledRef = useRef(!modal || isCollapsed);
   const previousIsCollapsedRef = useRef(isCollapsed);
   const firstNonzeroDetent =
@@ -169,7 +168,7 @@ export const BottomSheet = ({
         style={[StyleSheet.absoluteFill, { opacity: sheetOpacity }]}
       >
         <BottomSheetNativeComponent
-          pointerEvents={sheetPointerEvents}
+          pointerEvents="box-none"
           style={[
             {
               position: 'absolute',
@@ -186,11 +185,7 @@ export const BottomSheet = ({
           onIndexChange={handleIndexChange}
           onPositionChange={handlePositionChange}
         >
-          <View
-            collapsable={false}
-            style={{ flex: 1 }}
-            pointerEvents="box-none"
-          >
+          <View collapsable={false} style={{ flex: 1 }}>
             {children}
             <View onLayout={handleSentinelLayout} pointerEvents="none" />
           </View>

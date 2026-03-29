@@ -348,16 +348,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
   }
 
   override fun onTouchEvent(event: MotionEvent): Boolean {
-    val sheetTop = sheetContainer.top + sheetContainer.translationY
-    if (event.actionMasked == MotionEvent.ACTION_DOWN && event.y < sheetTop) {
-      return false
-    }
-
     when (event.actionMasked) {
-      MotionEvent.ACTION_DOWN -> {
-        beginPan(event)
-        return true
-      }
       MotionEvent.ACTION_MOVE -> {
         if (!isPanning) beginPan(event)
         val pointerIndex = event.findPointerIndex(activePointerId)
