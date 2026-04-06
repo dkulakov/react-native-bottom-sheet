@@ -1,4 +1,4 @@
-export type DetentValue = number | 'max';
+export type DetentValue = number | 'content';
 
 export type Detent =
   | DetentValue
@@ -69,7 +69,7 @@ export const resolveDetent = (
 ) => {
   const detentValueInput = detentValue(detent);
   if (typeof detentValueInput === 'number') return detentValueInput;
-  if (detentValueInput === 'max') {
+  if (detentValueInput === 'content') {
     return contentHeight > 0 ? Math.min(contentHeight, maxHeight) : maxHeight;
   }
   throw new Error(`Invalid detent: \`${detentValueInput}\`.`);

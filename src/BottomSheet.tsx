@@ -24,7 +24,7 @@ export interface BottomSheetProps {
 export const BottomSheet = ({
   children,
   style,
-  detents = [0, 'max'],
+  detents = [0, 'content'],
   index,
   animateIn = true,
   onIndexChange,

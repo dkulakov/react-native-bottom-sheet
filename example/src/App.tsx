@@ -203,7 +203,7 @@ const AppContent = () => {
         </SheetBackground>
       </ModalBottomSheet>
       <BottomSheet
-        detents={[0, SHEET_HEADER_HEIGHT + SECTION_HEIGHT, 'max']}
+        detents={[0, SHEET_HEADER_HEIGHT + SECTION_HEIGHT, 'content']}
         index={inlineIndex}
         onIndexChange={setInlineIndex}
       >
@@ -239,7 +239,7 @@ const AppContent = () => {
           0,
           SHEET_HEADER_HEIGHT +
             LIST_ITEM_HEIGHT * INLINE_FLATLIST_PREVIEW_ITEMS,
-          'max',
+          'content',
         ]}
         index={inlineFlatListIndex}
         onIndexChange={setInlineFlatListIndex}
