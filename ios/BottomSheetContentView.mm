@@ -90,6 +90,11 @@
   [self.delegate bottomSheetView:self didChangeIndex:index];
 }
 
+- (void)bottomSheetHostingView:(RNSBottomSheetHostingView *)view didSettle:(NSInteger)index
+{
+  [self.delegate bottomSheetView:self didSettle:index];
+}
+
 - (void)bottomSheetHostingView:(RNSBottomSheetHostingView *)view didChangePosition:(CGFloat)position
 {
   [self.delegate bottomSheetView:self didChangePosition:position];

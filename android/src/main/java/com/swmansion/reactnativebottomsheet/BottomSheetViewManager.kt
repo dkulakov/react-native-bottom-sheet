@@ -40,6 +40,16 @@ class BottomSheetViewManager :
           .receiveEvent(view.id, "topIndexChange", event)
       }
 
+      override fun onSettle(index: Int) {
+        val event = com.facebook.react.bridge.Arguments.createMap().apply {
+          putInt("index", index)
+        }
+        val reactContext = view.context as? ThemedReactContext ?: return
+        reactContext
+          .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
+          .receiveEvent(view.id, "topSettle", event)
+      }
+
       override fun onPositionChange(position: Double) {
         val event = com.facebook.react.bridge.Arguments.createMap().apply {
           putDouble("position", position)
@@ -79,6 +89,7 @@ class BottomSheetViewManager :
   override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> {
     return mapOf(
       "topIndexChange" to mapOf("registrationName" to "onIndexChange"),
+      "topSettle" to mapOf("registrationName" to "onSettle"),
       "topPositionChange" to mapOf("registrationName" to "onPositionChange"),
     )
   }

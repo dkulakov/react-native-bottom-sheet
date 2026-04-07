@@ -25,6 +25,7 @@ private data class DetentSpec(val height: Float, val programmatic: Boolean)
 
 interface BottomSheetViewListener {
   fun onIndexChange(index: Int)
+  fun onSettle(index: Int)
   fun onPositionChange(position: Double)
 }
 
@@ -140,7 +141,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
         val closedTy = detentSpecs.lastOrNull()?.height ?: h.toFloat()
         sheetContainer.translationY = closedTy
         emitPosition()
-        snapToIndex(targetIndex, 0f, emitIndexChange = false)
+        snapToIndex(targetIndex, 0f, emitIndexChange = false, emitSettle = false)
       } else {
         sheetContainer.translationY = translationY(targetIndex)
         emitPosition()
@@ -287,7 +288,12 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
   // MARK: - Spring animation
 
-  private fun snapToIndex(index: Int, velocity: Float, emitIndexChange: Boolean = true) {
+  private fun snapToIndex(
+    index: Int,
+    velocity: Float,
+    emitIndexChange: Boolean = true,
+    emitSettle: Boolean = true,
+  ) {
     if (index < 0 || index >= detentSpecs.size) return
     targetIndex = index
 
@@ -310,6 +316,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
         activeAnimation = null
         updateInteractionState()
         if (emitIndexChange) listener?.onIndexChange(index)
+        if (emitSettle) listener?.onSettle(index)
       }
     }
 

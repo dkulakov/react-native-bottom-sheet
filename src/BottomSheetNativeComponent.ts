@@ -19,6 +19,9 @@ export interface NativeProps extends ViewProps {
   onIndexChange?: CodegenTypes.DirectEventHandler<
     Readonly<{ index: CodegenTypes.Int32 }>
   >;
+  onSettle?: CodegenTypes.DirectEventHandler<
+    Readonly<{ index: CodegenTypes.Int32 }>
+  >;
   onPositionChange?: CodegenTypes.DirectEventHandler<
     Readonly<{ position: CodegenTypes.Double }>
   >;

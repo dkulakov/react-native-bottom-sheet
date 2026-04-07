@@ -100,6 +100,14 @@ using namespace facebook::react;
   }
 }
 
+- (void)bottomSheetView:(BottomSheetContentView *)view didSettle:(NSInteger)index
+{
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<const BottomSheetViewEventEmitter>(_eventEmitter);
+    emitter->onSettle({.index = static_cast<int>(index)});
+  }
+}
+
 - (void)bottomSheetView:(BottomSheetContentView *)view didChangePosition:(CGFloat)position
 {
   if (_eventEmitter) {

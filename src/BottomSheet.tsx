@@ -16,6 +16,7 @@ export interface BottomSheetProps {
   index: number;
   animateIn?: boolean;
   onIndexChange?: (index: number) => void;
+  onSettle?: (index: number) => void;
   onPositionChange?: (position: number) => void;
   modal?: boolean;
   scrimColor?: string;
@@ -28,6 +29,7 @@ export const BottomSheet = ({
   index,
   animateIn = true,
   onIndexChange,
+  onSettle,
   onPositionChange,
   modal = false,
   scrimColor = 'rgba(0, 0, 0, 0.5)',
@@ -54,6 +56,9 @@ export const BottomSheet = ({
   const isCollapsed = (resolvedDetents[clampedIndex]?.height ?? 0) === 0;
   const handleIndexChange = (event: { nativeEvent: { index: number } }) => {
     onIndexChange?.(event.nativeEvent.index);
+  };
+  const handleSettle = (event: { nativeEvent: { index: number } }) => {
+    onSettle?.(event.nativeEvent.index);
   };
 
   const handlePositionChange = (event: {
@@ -94,6 +99,7 @@ export const BottomSheet = ({
           modal={modal}
           scrimColor={scrimColor}
           onIndexChange={handleIndexChange}
+          onSettle={handleSettle}
           onPositionChange={handlePositionChange}
         >
           <View collapsable={false} style={{ flex: 1, maxHeight }}>
