@@ -237,6 +237,13 @@ public final class RNSBottomSheetHostingView: UIView {
     return maxHeight - ty
   }
 
+  public var currentContentOffsetY: CGFloat {
+    let maxHeight = detentSpecs.last?.height ?? bounds.height
+    let containerTop = bounds.height - maxHeight
+    let ty = sheetContainer.layer.presentation()?.affineTransform().ty ?? sheetContainer.transform.ty
+    return containerTop + ty
+  }
+
   private var isScrimVisible: Bool {
     modal && currentSheetHeight > 0.5
   }

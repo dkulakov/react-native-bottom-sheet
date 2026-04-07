@@ -65,6 +65,11 @@
   _impl.scrimColor = color;
 }
 
+- (CGFloat)currentContentOffsetY
+{
+  return _impl.currentContentOffsetY;
+}
+
 - (void)mountChildComponentView:(UIView *)childView atIndex:(NSInteger)index
 {
   [_impl mountChildComponentView:childView atIndex:index];

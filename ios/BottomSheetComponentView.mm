@@ -1,10 +1,10 @@
 #import "BottomSheetComponentView.h"
 #import "BottomSheetContentView.h"
+#import "../common/cpp/react/renderer/components/ReactNativeBottomSheetSpec/BottomSheetStateHelper.h"
+#import "../common/cpp/react/renderer/components/ReactNativeBottomSheetSpec/ComponentDescriptors.h"
 
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
-#import <react/renderer/components/ReactNativeBottomSheetSpec/BottomSheetStateHelper.h>
-#import <react/renderer/components/ReactNativeBottomSheetSpec/ComponentDescriptors.h>
 #import <react/renderer/components/ReactNativeBottomSheetSpec/EventEmitters.h>
 #import <react/renderer/components/ReactNativeBottomSheetSpec/Props.h>
 #import <react/renderer/components/ReactNativeBottomSheetSpec/RCTComponentViewHelpers.h>
@@ -107,7 +107,7 @@ using namespace facebook::react;
     emitter->onPositionChange({.position = static_cast<double>(position)});
   }
 
-  float contentOffsetY = static_cast<float>(self.bounds.size.height - position);
+  float contentOffsetY = static_cast<float>(view.currentContentOffsetY);
   if (contentOffsetY == _lastContentOffsetY) {
     return;
   }

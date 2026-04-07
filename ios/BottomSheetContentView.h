@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setDetents:(NSArray<NSDictionary *> *)raw;
 - (void)setDetentIndex:(NSInteger)newIndex;
 - (void)setScrimColor:(UIColor *_Nullable)color;
+- (CGFloat)currentContentOffsetY;
 - (void)mountChildComponentView:(UIView *)childView atIndex:(NSInteger)index;
 - (void)unmountChildComponentView:(UIView *)childView;
 - (void)resetSheetState;
