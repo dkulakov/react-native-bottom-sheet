@@ -35,6 +35,7 @@ public final class RNSBottomSheetHostingView: UIView {
   private let scrimView = UIControl()
   private var panGesture: UIPanGestureRecognizer!
   private var activeAnimator: UIViewPropertyAnimator?
+  private var activeAnimatorEmitsSettle = false
   private var displayLink: CADisplayLink?
   private var pendingIndex: Int?
   private var hasLaidOut = false
@@ -173,14 +174,16 @@ public final class RNSBottomSheetHostingView: UIView {
       if let animator = activeAnimator {
         stopDisplayLink()
         let visualTy = sheetContainer.layer.presentation()?.affineTransform().ty ?? sheetContainer.transform.ty
+        let shouldEmitSettle = activeAnimatorEmitsSettle
         animator.stopAnimation(true)
         activeAnimator = nil
+        activeAnimatorEmitsSettle = false
         sheetContainer.transform = CGAffineTransform(
           translationX: 0,
           y: min(max(visualTy, 0), detentSpecs.last?.height ?? visualTy)
         )
         emitPosition()
-        snapToIndex(targetIndex, velocity: 0, emitIndexChange: false, emitSettle: false)
+        snapToIndex(targetIndex, velocity: 0, emitIndexChange: false, emitSettle: shouldEmitSettle)
       } else {
         sheetContainer.transform = CGAffineTransform(translationX: 0, y: translationY(for: targetIndex))
         emitPosition()
@@ -337,6 +340,7 @@ public final class RNSBottomSheetHostingView: UIView {
     let clampedRatio = min(max(velocityRatio, -5), 5)
     let initialVelocity = CGVector(dx: 0, dy: clampedRatio)
 
+    activeAnimatorEmitsSettle = emitSettle
     activeAnimator?.stopAnimation(true)
 
     let spring = UISpringTimingParameters(dampingRatio: 1.0, initialVelocity: initialVelocity)
@@ -350,6 +354,7 @@ public final class RNSBottomSheetHostingView: UIView {
       self.stopDisplayLink()
       self.emitPosition()
       self.activeAnimator = nil
+      self.activeAnimatorEmitsSettle = false
       self.setContentInteractionEnabled(true)
       self.updateInteractionState()
       if emitIndexChange {

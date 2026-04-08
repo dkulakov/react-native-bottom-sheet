@@ -56,6 +56,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
   private val sheetContainer = FrameLayout(context)
   private val scrimPaint = Paint(Paint.ANTI_ALIAS_FLAG)
   private var activeAnimation: SpringAnimation? = null
+  private var activeAnimationEmitsSettle = false
   private var velocityTracker: VelocityTracker? = null
   private var choreographerCallback: Choreographer.FrameCallback? = null
   private val density = context.resources.displayMetrics.density
@@ -188,13 +189,15 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
         targetIndex = targetIndex.coerceIn(0, detentSpecs.size - 1)
         if (activeAnimation != null) {
           val currentTy = sheetContainer.translationY
+          val shouldEmitSettle = activeAnimationEmitsSettle
           activeAnimation?.cancel()
           activeAnimation = null
+          activeAnimationEmitsSettle = false
           stopChoreographer()
           sheetContainer.translationY =
             currentTy.coerceIn(0f, detentSpecs.lastOrNull()?.height ?: currentTy)
           emitPosition()
-          snapToIndex(targetIndex, 0f, emitIndexChange = false, emitSettle = false)
+          snapToIndex(targetIndex, 0f, emitIndexChange = false, emitSettle = shouldEmitSettle)
         } else {
           sheetContainer.translationY = translationY(targetIndex)
           emitPosition()
@@ -308,6 +311,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
     targetIndex = index
 
     val targetTy = translationY(index)
+    activeAnimationEmitsSettle = emitSettle
     activeAnimation?.cancel()
 
     val spring = SpringAnimation(sheetContainer, DynamicAnimation.TRANSLATION_Y, targetTy).apply {
@@ -323,6 +327,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
         stopChoreographer()
         emitPosition()
         activeAnimation = null
+        activeAnimationEmitsSettle = false
         updateInteractionState()
         if (emitIndexChange) listener?.onIndexChange(index)
         if (emitSettle) listener?.onSettle(index)
