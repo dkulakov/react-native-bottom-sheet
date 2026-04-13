@@ -261,9 +261,14 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
     val ty = sheetContainer.translationY
     val position = maxHeight - ty
     updateScrim(position)
+    updateSheetVisibility(position)
     updateInteractionState()
     listener?.onPositionChange((position / density).toDouble())
     updateShadowState(ty)
+  }
+
+  private fun updateSheetVisibility(position: Float) {
+    sheetContainer.alpha = if (position <= 0.5f) 0f else 1f
   }
 
   private var lastShadowOffsetY = Float.NaN

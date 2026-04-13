@@ -280,6 +280,7 @@ public final class RNSBottomSheetHostingView: UIView {
     let ty = sheetContainer.layer.presentation()?.affineTransform().ty ?? sheetContainer.transform.ty
     let position = maxHeight - ty
     updateScrim(forPosition: position)
+    updateSheetVisibility(forPosition: position)
     updateInteractionState()
     eventDelegate?.bottomSheetHostingView(self, didChangePosition: position)
   }
@@ -513,7 +514,12 @@ extension RNSBottomSheetHostingView: UIGestureRecognizerDelegate {
 private extension RNSBottomSheetHostingView {
   func updateScrim() {
     updateScrim(forPosition: currentSheetHeight)
+    updateSheetVisibility(forPosition: currentSheetHeight)
     updateInteractionState()
+  }
+
+  func updateSheetVisibility(forPosition position: CGFloat) {
+    sheetContainer.alpha = position <= 0.5 ? 0 : 1
   }
 
   func updateScrim(forPosition position: CGFloat) {

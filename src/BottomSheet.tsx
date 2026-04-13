@@ -1,6 +1,6 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { LayoutChangeEvent, StyleProp, ViewStyle } from 'react-native';
-import { Animated, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BottomSheetNativeComponent from './BottomSheetNativeComponent';
@@ -38,7 +38,6 @@ export const BottomSheet = ({
   const insets = useSafeAreaInsets();
   const maxHeight = windowHeight - insets.top;
   const [contentHeight, setContentHeight] = useState(0);
-  const sheetOpacity = useRef(new Animated.Value(0)).current;
 
   const resolvedDetents = detents.map((detent) => {
     const value = resolveDetent(detent, contentHeight, maxHeight);
@@ -65,19 +64,15 @@ export const BottomSheet = ({
     nativeEvent: { position: number };
   }) => {
     const height = event.nativeEvent.position;
-    sheetOpacity.setValue(height === 0 ? 0 : 1);
     onPositionChange?.(height);
   };
 
   const sheet = (
-    <Animated.View
+    <View
       style={StyleSheet.absoluteFill}
       pointerEvents={modal ? (isCollapsed ? 'none' : 'auto') : 'box-none'}
     >
-      <Animated.View
-        pointerEvents="box-none"
-        style={[StyleSheet.absoluteFill, { opacity: sheetOpacity }]}
-      >
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <BottomSheetNativeComponent
           pointerEvents="box-none"
           style={[
@@ -107,8 +102,8 @@ export const BottomSheet = ({
             <View onLayout={handleSentinelLayout} pointerEvents="none" />
           </View>
         </BottomSheetNativeComponent>
-      </Animated.View>
-    </Animated.View>
+      </View>
+    </View>
   );
 
   if (modal) {
