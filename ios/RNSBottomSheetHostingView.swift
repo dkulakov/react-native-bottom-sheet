@@ -28,7 +28,7 @@ public final class RNSBottomSheetHostingView: UIView {
   public var modal: Bool = false {
     didSet { updateScrim() }
   }
-  public var scrimColor: UIColor? = UIColor.black.withAlphaComponent(0.5) {
+  public var scrimColor: UIColor? = .clear {
     didSet { scrimView.backgroundColor = scrimColor }
   }
   public var maxDetentHeight: CGFloat = .nan {

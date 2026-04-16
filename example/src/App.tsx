@@ -23,6 +23,7 @@ const SHEET_HEADER_HEIGHT = HANDLE_HEIGHT + HEADER_HEIGHT;
 const SECTION_HEIGHT = 176;
 const LIST_ITEM_HEIGHT = 48;
 const INLINE_FLATLIST_PREVIEW_ITEMS = 5;
+const MODAL_SCRIM_COLOR = 'rgba(0, 0, 0, 0.5)';
 
 const DATA = Array.from({ length: 48 }, (_, i) => ({
   id: String(i),
@@ -135,7 +136,11 @@ const AppContent = () => {
           onPress={() => setInlineFlatListIndex(1)}
         />
       </View>
-      <ModalBottomSheet index={basicIndex} onIndexChange={setBasicIndex}>
+      <ModalBottomSheet
+        index={basicIndex}
+        onIndexChange={setBasicIndex}
+        scrimColor={MODAL_SCRIM_COLOR}
+      >
         <SheetBackground>
           <SheetHeader title="Basic modal" onClose={() => setBasicIndex(0)} />
           <View
@@ -152,6 +157,7 @@ const AppContent = () => {
       <ModalBottomSheet
         index={scrollViewIndex}
         onIndexChange={setScrollViewIndex}
+        scrimColor={MODAL_SCRIM_COLOR}
       >
         <SheetBackground style={{ flex: 1 }}>
           <SheetHeader
@@ -176,7 +182,11 @@ const AppContent = () => {
           </ScrollView>
         </SheetBackground>
       </ModalBottomSheet>
-      <ModalBottomSheet index={flatListIndex} onIndexChange={setFlatListIndex}>
+      <ModalBottomSheet
+        index={flatListIndex}
+        onIndexChange={setFlatListIndex}
+        scrimColor={MODAL_SCRIM_COLOR}
+      >
         <SheetBackground style={{ flex: 1 }}>
           <SheetHeader
             title="Modal with FlatList"

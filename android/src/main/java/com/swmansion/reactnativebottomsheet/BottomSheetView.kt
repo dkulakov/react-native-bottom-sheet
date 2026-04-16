@@ -75,7 +75,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
   private var lastTouchY = 0f
   private var activePointerId = MotionEvent.INVALID_POINTER_ID
   private var scrimPressed = false
-  private var scrimColor = Color.argb(128, 0, 0, 0)
+  private var scrimColor = Color.TRANSPARENT
   private var scrimProgress = 0f
   private var maxDetentHeight = Float.NaN
   private var contentHeightMarker: View? = null
@@ -224,7 +224,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
   }
 
   fun setScrimColor(color: Int?) {
-    scrimColor = color ?: Color.argb(128, 0, 0, 0)
+    scrimColor = color ?: Color.TRANSPARENT
     invalidate()
   }
 

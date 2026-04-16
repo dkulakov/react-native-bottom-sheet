@@ -17,7 +17,7 @@ export interface NativeProps extends ViewProps {
   index: CodegenTypes.Int32;
   animateIn: boolean;
   modal: boolean;
-  scrimColor: ColorValue;
+  scrimColor?: ColorValue;
   onIndexChange?: CodegenTypes.DirectEventHandler<
     Readonly<{ index: CodegenTypes.Int32 }>
   >;

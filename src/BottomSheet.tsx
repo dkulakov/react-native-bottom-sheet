@@ -32,7 +32,7 @@ export const BottomSheet = ({
   onSettle,
   onPositionChange,
   modal = false,
-  scrimColor = 'rgba(0, 0, 0, 0.5)',
+  scrimColor,
 }: BottomSheetProps) => {
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
