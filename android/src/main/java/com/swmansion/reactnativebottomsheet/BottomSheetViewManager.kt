@@ -14,8 +14,7 @@ import com.facebook.react.viewmanagers.BottomSheetViewManagerInterface
 
 @ReactModule(name = BottomSheetViewManager.NAME)
 class BottomSheetViewManager :
-  ViewGroupManager<BottomSheetView>(),
-  BottomSheetViewManagerInterface<BottomSheetView> {
+  ViewGroupManager<BottomSheetView>(), BottomSheetViewManagerInterface<BottomSheetView> {
 
   companion object {
     const val NAME = "BottomSheetView"
@@ -29,37 +28,37 @@ class BottomSheetViewManager :
 
   override fun createViewInstance(context: ThemedReactContext): BottomSheetView {
     val view = BottomSheetView(context)
-    view.listener = object : BottomSheetViewListener {
-      override fun onIndexChange(index: Int) {
-        val event = com.facebook.react.bridge.Arguments.createMap().apply {
-          putInt("index", index)
+    view.listener =
+      object : BottomSheetViewListener {
+        override fun onIndexChange(index: Int) {
+          val event =
+            com.facebook.react.bridge.Arguments.createMap().apply { putInt("index", index) }
+          val reactContext = view.context as? ThemedReactContext ?: return
+          reactContext
+            .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
+            .receiveEvent(view.id, "topIndexChange", event)
         }
-        val reactContext = view.context as? ThemedReactContext ?: return
-        reactContext
-          .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
-          .receiveEvent(view.id, "topIndexChange", event)
-      }
 
-      override fun onSettle(index: Int) {
-        val event = com.facebook.react.bridge.Arguments.createMap().apply {
-          putInt("index", index)
+        override fun onSettle(index: Int) {
+          val event =
+            com.facebook.react.bridge.Arguments.createMap().apply { putInt("index", index) }
+          val reactContext = view.context as? ThemedReactContext ?: return
+          reactContext
+            .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
+            .receiveEvent(view.id, "topSettle", event)
         }
-        val reactContext = view.context as? ThemedReactContext ?: return
-        reactContext
-          .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
-          .receiveEvent(view.id, "topSettle", event)
-      }
 
-      override fun onPositionChange(position: Double) {
-        val event = com.facebook.react.bridge.Arguments.createMap().apply {
-          putDouble("position", position)
+        override fun onPositionChange(position: Double) {
+          val event =
+            com.facebook.react.bridge.Arguments.createMap().apply {
+              putDouble("position", position)
+            }
+          val reactContext = view.context as? ThemedReactContext ?: return
+          reactContext
+            .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
+            .receiveEvent(view.id, "topPositionChange", event)
         }
-        val reactContext = view.context as? ThemedReactContext ?: return
-        reactContext
-          .getJSModule(com.facebook.react.uimanager.events.RCTEventEmitter::class.java)
-          .receiveEvent(view.id, "topPositionChange", event)
       }
-    }
     return view
   }
 
@@ -69,7 +68,8 @@ class BottomSheetViewManager :
 
   override fun getChildCount(parent: BottomSheetView): Int = parent.sheetChildCount
 
-  override fun getChildAt(parent: BottomSheetView, index: Int): View? = parent.getSheetChildAt(index)
+  override fun getChildAt(parent: BottomSheetView, index: Int): View? =
+    parent.getSheetChildAt(index)
 
   override fun removeViewAt(parent: BottomSheetView, index: Int) {
     parent.removeSheetChildAt(index)

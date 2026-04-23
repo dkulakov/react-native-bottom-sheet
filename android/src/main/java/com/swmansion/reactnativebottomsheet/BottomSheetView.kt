@@ -17,8 +17,8 @@ import androidx.dynamicanimation.animation.SpringForce
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.uimanager.StateWrapper
-import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.uimanager.events.NativeGestureUtil
+import com.facebook.react.views.view.ReactViewGroup
 import kotlin.math.abs
 
 private enum class DetentKind {
@@ -27,11 +27,14 @@ private enum class DetentKind {
 }
 
 private data class RawDetentSpec(val value: Float, val kind: DetentKind, val programmatic: Boolean)
+
 private data class DetentSpec(val height: Float, val programmatic: Boolean)
 
 interface BottomSheetViewListener {
   fun onIndexChange(index: Int)
+
   fun onSettle(index: Int)
+
   fun onPositionChange(position: Double)
 }
 
@@ -54,6 +57,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
       updateInteractionState()
       updateScrim()
     }
+
   var disableScrollableNegotiation: Boolean = false
   private var pendingIndex: Int? = null
   private var hasLaidOut = false
@@ -83,9 +87,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
   private var contentHeightMarker: View? = null
 
   private val contentHeightMarkerLayoutListener =
-    View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-      refreshDetentsFromLayout()
-    }
+    View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> refreshDetentsFromLayout() }
 
   init {
     clipChildren = false
@@ -199,16 +201,17 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
   // MARK: - Prop setters
 
   fun setDetents(raw: List<Map<String, Any>>) {
-    rawDetentSpecs = raw.mapNotNull { dict ->
-      val value = (dict["value"] as? Number)?.toDouble() ?: return@mapNotNull null
-      val kind =
-        when ((dict["kind"] as? String)?.lowercase()) {
-          "content" -> DetentKind.CONTENT
-          else -> DetentKind.POINTS
-        }
-      val programmatic = dict["programmatic"] as? Boolean ?: false
-      RawDetentSpec(value = (value * density).toFloat(), kind = kind, programmatic = programmatic)
-    }
+    rawDetentSpecs =
+      raw.mapNotNull { dict ->
+        val value = (dict["value"] as? Number)?.toDouble() ?: return@mapNotNull null
+        val kind =
+          when ((dict["kind"] as? String)?.lowercase()) {
+            "content" -> DetentKind.CONTENT
+            else -> DetentKind.POINTS
+          }
+        val programmatic = dict["programmatic"] as? Boolean ?: false
+        RawDetentSpec(value = (value * density).toFloat(), kind = kind, programmatic = programmatic)
+      }
     refreshDetentsFromLayout()
   }
 
@@ -384,12 +387,13 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
   private fun startChoreographer() {
     if (choreographerCallback != null) return
-    val callback = object : Choreographer.FrameCallback {
-      override fun doFrame(frameTimeNanos: Long) {
-        emitPosition()
-        choreographerCallback?.let { Choreographer.getInstance().postFrameCallback(it) }
+    val callback =
+      object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+          emitPosition()
+          choreographerCallback?.let { Choreographer.getInstance().postFrameCallback(it) }
+        }
       }
-    }
     choreographerCallback = callback
     Choreographer.getInstance().postFrameCallback(callback)
   }
@@ -414,27 +418,29 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
     activeAnimationEmitsSettle = emitSettle
     activeAnimation?.cancel()
 
-    val spring = SpringAnimation(sheetContainer, DynamicAnimation.TRANSLATION_Y, targetTy).apply {
-      spring = SpringForce(targetTy).apply {
-        dampingRatio = SpringForce.DAMPING_RATIO_NO_BOUNCY
-        stiffness = SpringForce.STIFFNESS_MEDIUM
-      }
-      setMinValue(minDetentTranslationY)
-      setMaxValue(maxDetentTranslationY)
-      setStartVelocity(velocity)
-      addEndListener { _, canceled, _, _ ->
-        if (canceled) {
-          return@addEndListener
+    val spring =
+      SpringAnimation(sheetContainer, DynamicAnimation.TRANSLATION_Y, targetTy).apply {
+        spring =
+          SpringForce(targetTy).apply {
+            dampingRatio = SpringForce.DAMPING_RATIO_NO_BOUNCY
+            stiffness = SpringForce.STIFFNESS_MEDIUM
+          }
+        setMinValue(minDetentTranslationY)
+        setMaxValue(maxDetentTranslationY)
+        setStartVelocity(velocity)
+        addEndListener { _, canceled, _, _ ->
+          if (canceled) {
+            return@addEndListener
+          }
+          stopChoreographer()
+          emitPosition()
+          activeAnimation = null
+          activeAnimationEmitsSettle = false
+          updateInteractionState()
+          if (emitIndexChange) listener?.onIndexChange(index)
+          if (emitSettle) listener?.onSettle(index)
         }
-        stopChoreographer()
-        emitPosition()
-        activeAnimation = null
-        activeAnimationEmitsSettle = false
-        updateInteractionState()
-        if (emitIndexChange) listener?.onIndexChange(index)
-        if (emitSettle) listener?.onSettle(index)
       }
-    }
 
     activeAnimation = spring
     startChoreographer()
@@ -449,11 +455,13 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
     if (velocity < -flickThreshold) {
       return draggable.firstOrNull { it.value.height > currentHeight }?.index
-        ?: draggable.lastOrNull()?.index ?: targetIndex
+        ?: draggable.lastOrNull()?.index
+        ?: targetIndex
     }
     if (velocity > flickThreshold) {
       return draggable.lastOrNull { it.value.height < currentHeight }?.index
-        ?: draggable.firstOrNull()?.index ?: targetIndex
+        ?: draggable.firstOrNull()?.index
+        ?: targetIndex
     }
 
     return draggable.minByOrNull { abs(it.value.height - currentHeight) }?.index ?: targetIndex
@@ -514,7 +522,8 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
           }
         }
       }
-      MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+      MotionEvent.ACTION_UP,
+      MotionEvent.ACTION_CANCEL -> {
         initialTouchX = 0f
         initialTouchY = 0f
         activePointerId = MotionEvent.INVALID_POINTER_ID
@@ -573,15 +582,17 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
         emitPosition()
         return true
       }
-      MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+      MotionEvent.ACTION_UP,
+      MotionEvent.ACTION_CANCEL -> {
         isPanning = false
         activePointerId = MotionEvent.INVALID_POINTER_ID
-        val velocity = velocityTracker?.let { tracker ->
-          tracker.computeCurrentVelocity(1000)
-          val v = tracker.yVelocity
-          tracker.recycle()
-          v
-        } ?: 0f
+        val velocity =
+          velocityTracker?.let { tracker ->
+            tracker.computeCurrentVelocity(1000)
+            val v = tracker.yVelocity
+            tracker.recycle()
+            v
+          } ?: 0f
         velocityTracker = null
         val maxHeight = detentSpecs.maxOfOrNull { it.height } ?: resolvedMaxDetentHeight()
         val currentHeight = maxHeight - sheetContainer.translationY
@@ -636,9 +647,9 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
     val containerY = initialTouchY - sheetContainer.top - sheetContainer.translationY
     if (
       containerX < 0f ||
-      containerX >= sheetContainer.width ||
-      containerY < 0f ||
-      containerY >= sheetContainer.height
+        containerX >= sheetContainer.width ||
+        containerY < 0f ||
+        containerY >= sheetContainer.height
     ) {
       return null
     }
@@ -656,7 +667,9 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
         if (childX < 0f || childX >= child.width || childY < 0f || childY >= child.height) {
           continue
         }
-        findScrollableAtPoint(child, childX, childY)?.let { return it }
+        findScrollableAtPoint(child, childX, childY)?.let {
+          return it
+        }
       }
     }
 
@@ -717,15 +730,16 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
     // When settled at the closed detent, dynamic content updates can briefly
     // produce stale non-zero positions. Keep scrim hidden in this state.
-    if (closedIndex != null && targetIndex == closedIndex && activeAnimation == null && !isPanning) {
+    if (
+      closedIndex != null && targetIndex == closedIndex && activeAnimation == null && !isPanning
+    ) {
       scrimProgress = 0f
       invalidate()
       return
     }
 
     val threshold = firstNonZeroDetentHeight
-    scrimProgress =
-      if (threshold <= 0f) 0f else (position / threshold).coerceIn(0f, 1f)
+    scrimProgress = if (threshold <= 0f) 0f else (position / threshold).coerceIn(0f, 1f)
     invalidate()
   }
 

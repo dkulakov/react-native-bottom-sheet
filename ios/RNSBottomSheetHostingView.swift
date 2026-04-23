@@ -28,12 +28,15 @@ public final class RNSBottomSheetHostingView: UIView {
   public var modal: Bool = false {
     didSet { updateScrim() }
   }
+
   public var scrimColor: UIColor? = .clear {
     didSet { scrimView.backgroundColor = scrimColor }
   }
+
   public var maxDetentHeight: CGFloat = .nan {
     didSet { refreshDetentsFromLayout() }
   }
+
   public var disableScrollableNegotiation: Bool = false
 
   private var rawDetentSpecs: [RawDetentSpec] = []
@@ -59,7 +62,7 @@ public final class RNSBottomSheetHostingView: UIView {
   private var isContentInteractionDisabled = false
   private weak var contentHeightMarker: UIView?
 
-  public override init(frame: CGRect) {
+  override public init(frame: CGRect) {
     super.init(frame: frame)
     backgroundColor = .clear
     clipsToBounds = false
@@ -84,19 +87,20 @@ public final class RNSBottomSheetHostingView: UIView {
     sheetContainer.addGestureRecognizer(panGesture)
   }
 
-  public required init?(coder: NSCoder) {
+  @available(*, unavailable)
+  public required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
-  // RCTSurfaceTouchHandler dispatches touch events to JS independently of the
-  // pan gesture (it fires in touchesBegan: regardless of its recognizer state).
-  // We cache it here and toggle isEnabled in handlePan(.began) to force a
-  // touchesCancelled dispatch to JS, preventing Pressable from firing onPress
-  // during a sheet drag. This is the iOS equivalent of Android's
-  // NativeGestureUtil.notifyNativeGestureStarted.
+  /// RCTSurfaceTouchHandler dispatches touch events to JS independently of the
+  /// pan gesture (it fires in touchesBegan: regardless of its recognizer state).
+  /// We cache it here and toggle isEnabled in handlePan(.began) to force a
+  /// touchesCancelled dispatch to JS, preventing Pressable from firing onPress
+  /// during a sheet drag. This is the iOS equivalent of Android's
+  /// NativeGestureUtil.notifyNativeGestureStarted.
   private weak var surfaceTouchHandler: UIGestureRecognizer?
 
-  public override func didMoveToWindow() {
+  override public func didMoveToWindow() {
     super.didMoveToWindow()
     surfaceTouchHandler = nil
     guard window != nil else { return }
@@ -112,7 +116,7 @@ public final class RNSBottomSheetHostingView: UIView {
     }
   }
 
-  public override func layoutSubviews() {
+  override public func layoutSubviews() {
     super.layoutSubviews()
     guard bounds.width > 0, bounds.height > 0 else { return }
 
@@ -152,7 +156,7 @@ public final class RNSBottomSheetHostingView: UIView {
     return sheetContainer.frame
   }
 
-  public override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+  override public func point(inside point: CGPoint, with _: UIEvent?) -> Bool {
     if presentedSheetFrame.contains(point) {
       return true
     }
@@ -160,10 +164,10 @@ public final class RNSBottomSheetHostingView: UIView {
     return isScrimVisible && bounds.contains(point)
   }
 
-  public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+  override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
     guard self.point(inside: point, with: event) else { return nil }
 
-    if isScrimVisible && !presentedSheetFrame.contains(point) {
+    if isScrimVisible, !presentedSheetFrame.contains(point) {
       let scrimPoint = convert(point, to: scrimView)
       return scrimView.hitTest(scrimPoint, with: event)
     }
@@ -475,7 +479,7 @@ public final class RNSBottomSheetHostingView: UIView {
     return nil
   }
 
-  public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+  override public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
     guard gestureRecognizer === panGesture else { return true }
 
     let velocity = panGesture.velocity(in: self)
@@ -552,7 +556,7 @@ public final class RNSBottomSheetHostingView: UIView {
       return
     }
 
-    if hasLaidOut && !isPanning {
+    if hasLaidOut, !isPanning {
       targetIndex = max(0, min(detentSpecs.count - 1, targetIndex))
 
       if let animator = activeAnimator {
@@ -606,8 +610,8 @@ extension RNSBottomSheetHostingView: UIGestureRecognizerDelegate {
   }
 
   public func gestureRecognizer(
-    _ gestureRecognizer: UIGestureRecognizer,
-    shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
+    _: UIGestureRecognizer,
+    shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
   ) -> Bool {
     return false
   }
