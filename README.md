@@ -10,6 +10,7 @@ React&nbsp;Native.
 ## Highlights
 
 - Native implementation for optimal&nbsp;performance.
+- Both inline and modal sheet&nbsp;components.
 - Bring your own sheet&nbsp;surface.
 - Dynamic, content&zwj;-&zwj;based sizing out of the&nbsp;box.
 - Automatic handling of vertically scrollable&nbsp;children.
@@ -70,7 +71,8 @@ const insets = useSafeAreaInsets();
 
 ### Modal
 
-`ModalBottomSheet` renders above other content with a&nbsp;scrim.
+`ModalBottomSheet` renders above other content with an optional scrim
+(transparent by&nbsp;default).
 
 ```tsx
 const [index, setIndex] = useState(0);
@@ -106,6 +108,25 @@ its&nbsp;color:
 </ModalBottomSheet>
 ```
 
+### Scrollable negotiation
+
+By default, the sheet coordinates vertical gestures with nested scrollables,
+such as `ScrollView` and&nbsp;`FlatList`.
+
+If you want gestures that start inside a nested scrollable to stay with that
+scrollable even when it cannot scroll any further,
+set&nbsp;`disableScrollableNegotiation`:
+
+```tsx
+<BottomSheet
+  index={index}
+  onIndexChange={setIndex}
+  disableScrollableNegotiation
+>
+  {/* ... */}
+</BottomSheet>
+```
+
 ### Detents and index
 
 Detents are the points to which the sheet snaps. Each detent is either a number
@@ -138,6 +159,9 @@ const [index, setIndex] = useState(0);
   {/* ... */}
 </BottomSheet>
 ```
+
+Detents can also change over time. When you update `detents`, the sheet keeps
+the current index and animates to the updated detent height when needed.
 
 #### Programmatic-only detents
 
