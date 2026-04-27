@@ -1,31 +1,34 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useId,
-  useReducer,
+  useLayoutEffect,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+type PortalSnapshot = Array<[string, ReactNode]>;
 
 interface PortalContextType {
   addPortal: (key: string, element: ReactNode) => void;
   removePortal: (key: string) => void;
   subscribe: (callback: () => void) => () => void;
-  getPortals: () => Map<string, ReactNode>;
+  getSnapshot: () => PortalSnapshot;
 }
 
 const PortalContext = createContext<PortalContextType | null>(null);
 
 const PortalHost = () => {
   const context = useContext(PortalContext)!;
-  const [, forceRender] = useReducer((x: number) => x + 1, 0);
-  useEffect(() => {
-    return context.subscribe(forceRender);
-  }, [context]);
+  const portals = useSyncExternalStore(
+    context.subscribe,
+    context.getSnapshot,
+    context.getSnapshot
+  );
 
-  return Array.from(context.getPortals().entries()).map(([key, element]) => (
+  return portals.map(([key, element]) => (
     <View key={key} style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {element}
     </View>
@@ -37,7 +40,9 @@ export const BottomSheetProvider = ({ children }: { children: ReactNode }) => {
   const [context] = useState<PortalContextType>(() => {
     const portals = new Map<string, ReactNode>();
     const subscribers = new Set<() => void>();
+    let snapshot: PortalSnapshot = [];
     const notify = () => {
+      snapshot = Array.from(portals.entries());
       subscribers.forEach((subscriber) => subscriber());
     };
     return {
@@ -55,7 +60,7 @@ export const BottomSheetProvider = ({ children }: { children: ReactNode }) => {
           subscribers.delete(callback);
         };
       },
-      getPortals: () => portals,
+      getSnapshot: () => snapshot,
     };
   });
 
@@ -76,10 +81,10 @@ export const Portal = ({ children }: { children: ReactNode }) => {
   const { addPortal, removePortal } = context;
   const id = useId();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     addPortal(id, children);
   }, [id, children, addPortal]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     return () => {
       removePortal(id);
     };
