@@ -232,6 +232,6 @@ product&zwj;—&zwj;[hire&nbsp;us](https://swmansion.com/contact/projects?utm_so
 
 ## Sponsored by [Gobi Maps](https://www.gobimaps.com)
 
-A social map for exploring your&nbsp;city.
+The best of your city, all in one&nbsp;map.
 
 [<img src="gobi.png" height="80" />](https://www.gobimaps.com)
