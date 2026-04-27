@@ -146,10 +146,10 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
   // MARK: - Layout
 
-  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-    super.onLayout(changed, l, t, r, b)
-    val w = r - l
-    val h = b - t
+  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+    super.onLayout(changed, left, top, right, bottom)
+    val w = right - left
+    val h = bottom - top
     if (w <= 0 || h <= 0) return
 
     refreshContentHeightMarker()
@@ -494,14 +494,14 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
 
   // MARK: - Touch handling
 
-  override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+  override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     val sheetTop = sheetContainer.top + sheetContainer.translationY
-    if (ev.actionMasked == MotionEvent.ACTION_DOWN && ev.y < sheetTop) {
+    if (event.actionMasked == MotionEvent.ACTION_DOWN && event.y < sheetTop) {
       if (isScrimVisible()) {
-        initialTouchX = ev.x
-        initialTouchY = ev.y
-        lastTouchY = ev.y
-        activePointerId = ev.getPointerId(0)
+        initialTouchX = event.x
+        initialTouchY = event.y
+        lastTouchY = event.y
+        activePointerId = event.getPointerId(0)
         scrimPressed = true
         scrimTouchActive = true
         return true
@@ -509,19 +509,19 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
       return false
     }
 
-    when (ev.actionMasked) {
+    when (event.actionMasked) {
       MotionEvent.ACTION_DOWN -> {
-        initialTouchX = ev.x
-        initialTouchY = ev.y
-        lastTouchY = ev.y
-        activePointerId = ev.getPointerId(0)
+        initialTouchX = event.x
+        initialTouchY = event.y
+        lastTouchY = event.y
+        activePointerId = event.getPointerId(0)
       }
       MotionEvent.ACTION_MOVE -> {
         if (activePointerId == MotionEvent.INVALID_POINTER_ID) return false
-        val pointerIndex = ev.findPointerIndex(activePointerId)
+        val pointerIndex = event.findPointerIndex(activePointerId)
         if (pointerIndex < 0) return false
-        val x = ev.getX(pointerIndex)
-        val y = ev.getY(pointerIndex)
+        val x = event.getX(pointerIndex)
+        val y = event.getY(pointerIndex)
         val dx = x - initialTouchX
         val dy = y - initialTouchY
 
@@ -536,13 +536,13 @@ class BottomSheetView(context: Context) : ReactViewGroup(context) {
             // processes events at the root view level before onInterceptTouchEvent
             // runs, so without this the JS side never sees a cancel and Pressable
             // would still fire onPress.
-            NativeGestureUtil.notifyNativeGestureStarted(this, ev)
+            NativeGestureUtil.notifyNativeGestureStarted(this, event)
             return true
           }
           if (dy > 0 && isScrollViewAtTop()) {
             lastTouchY = y
             requestDisallowInterceptTouchEvent(false)
-            NativeGestureUtil.notifyNativeGestureStarted(this, ev)
+            NativeGestureUtil.notifyNativeGestureStarted(this, event)
             return true
           }
         }
