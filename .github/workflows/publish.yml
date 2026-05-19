@@ -20,4 +20,8 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn prepare
-      - run: npm publish --access public --ignore-scripts
+      - name: Resolve npm dist-tag
+        run: |
+          tag=$(node -p "const version = require('./package.json').version; const match = version.match(/^[^-]+-([0-9A-Za-z]+)(?:[.-].*)?$/); match ? match[1] : 'latest'")
+          echo "NPM_PUBLISH_TAG=$tag" >> "$GITHUB_ENV"
+      - run: npm publish --access public --ignore-scripts --tag "$NPM_PUBLISH_TAG"
