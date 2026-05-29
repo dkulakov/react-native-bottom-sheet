@@ -58,6 +58,10 @@ export default function RootLayout() {
             name="dynamic-content-height"
             options={{ title: 'Dynamic content height', headerShown: false }}
           />
+          <Stack.Screen
+            name="no-animate-in"
+            options={{ title: 'No animate in', headerShown: false }}
+          />
         </Stack>
       </BottomSheetProvider>
     </SafeAreaProvider>

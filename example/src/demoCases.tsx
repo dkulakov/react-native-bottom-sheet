@@ -29,7 +29,8 @@ export type CaseKey =
   | 'disable-scrollable-negotiation'
   | 'programmatic-detent-drag'
   | 'dynamic-detents'
-  | 'dynamic-content-height';
+  | 'dynamic-content-height'
+  | 'no-animate-in';
 
 export type DemoCase = {
   key: CaseKey;
@@ -567,6 +568,60 @@ export const DynamicContentHeightScreen = () => {
   );
 };
 
+export const NoAnimateInScreen = () => {
+  const [mountKey, setMountKey] = useState(0);
+  const [index, setIndex] = useState(1);
+
+  return (
+    <DemoScreen
+      title="No animate in"
+      sheet={
+        <BottomSheet
+          key={mountKey}
+          animateIn={false}
+          detents={[0, SHEET_HEADER_HEIGHT + SECTION_HEIGHT, 'content']}
+          index={index}
+          onIndexChange={setIndex}
+        >
+          <SheetBackground>
+            <SheetHeader title="No animate in" onClose={() => setIndex(0)} />
+            <View
+              style={{
+                height: SECTION_HEIGHT,
+                paddingHorizontal: 20,
+                justifyContent: 'center',
+                gap: 12,
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: '600' }}>
+                Sheet should appear without sliding up
+              </Text>
+              <Text style={{ fontSize: 15, lineHeight: 22, color: '#555' }}>
+                With animateIn={'{false}'} and an initial index of 1, the sheet
+                should be at its detent immediately on first layout. Tap
+                "Remount sheet" to re-observe the initial layout — it must not
+                animate in.
+              </Text>
+            </View>
+          </SheetBackground>
+        </BottomSheet>
+      }
+    >
+      <View style={{ gap: 12 }}>
+        <Button
+          title="Remount sheet"
+          onPress={() => {
+            setIndex(1);
+            setMountKey((value) => value + 1);
+          }}
+        />
+        <Button title="Collapse" onPress={() => setIndex(0)} />
+        <Button title="Expand to content" onPress={() => setIndex(2)} />
+      </View>
+    </DemoScreen>
+  );
+};
+
 export const DEMO_CASES: DemoCase[] = [
   {
     key: 'basic-modal',
@@ -631,5 +686,12 @@ export const DEMO_CASES: DemoCase[] = [
     description:
       'Resize the content of a modal sheet: grow animates, shrink snaps, scrim stays opaque.',
     href: '/dynamic-content-height',
+  },
+  {
+    key: 'no-animate-in',
+    title: 'No animate in',
+    description:
+      'Inline sheet with animateIn={false}: it should appear at its detent without sliding up.',
+    href: '/no-animate-in',
   },
 ];
