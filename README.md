@@ -45,7 +45,7 @@ That is a good fit when you want a system&zwj;-&zwj;style presented sheet, but
 it also means the platform and presentation system decide more of the behavior.
 React Native Bottom Sheet is built as a lower&zwj;-&zwj;level sheet primitive
 instead: The same native implementation powers both persistent inline sheets and
-modal sheets, your children provide the complete sheet surface, and detents can
+modal sheets, you provide the complete sheet surface in React, and detents can
 include app&zwj;-&zwj;level behavior such as programmatic&zwj;-&zwj;only
 snap&nbsp;points.
 
@@ -82,9 +82,9 @@ relative to the&nbsp;provider.
 ## Usage
 
 The library provides two components: `BottomSheet` (inline) and
-`ModalBottomSheet` (modal). Both render their children as the sheet content
-(including any background) and are controlled via `detents`, `index`,
-and&nbsp;`onIndexChange`. Use `onSettle` for
+`ModalBottomSheet` (modal). Both render their children as the sheet content,
+with a `surface` prop for the background behind it, and are controlled via
+`detents`, `index`, and&nbsp;`onIndexChange`. Use `onSettle` for
 post&zwj;-&zwj;snap&nbsp;observability.
 
 ### Inline
@@ -97,14 +97,14 @@ const insets = useSafeAreaInsets();
 ```
 
 ```tsx
-<BottomSheet index={index} onIndexChange={setIndex}>
-  <View
-    style={{
-      backgroundColor: 'white',
-      padding: 16,
-      paddingBottom: insets.bottom + 16,
-    }}
-  >
+<BottomSheet
+  index={index}
+  onIndexChange={setIndex}
+  surface={
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'white' }]} />
+  }
+>
+  <View style={{ padding: 16, paddingBottom: insets.bottom + 16 }}>
     <Text>Sheet content</Text>
   </View>
 </BottomSheet>
@@ -121,14 +121,14 @@ const insets = useSafeAreaInsets();
 ```
 
 ```tsx
-<ModalBottomSheet index={index} onIndexChange={setIndex}>
-  <View
-    style={{
-      backgroundColor: 'white',
-      padding: 16,
-      paddingBottom: insets.bottom + 16,
-    }}
-  >
+<ModalBottomSheet
+  index={index}
+  onIndexChange={setIndex}
+  surface={
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'white' }]} />
+  }
+>
+  <View style={{ padding: 16, paddingBottom: insets.bottom + 16 }}>
     <Text>Sheet content</Text>
   </View>
 </ModalBottomSheet>
@@ -143,10 +143,37 @@ its&nbsp;color:
 <ModalBottomSheet
   index={index}
   onIndexChange={setIndex}
+  surface={/* ... */}
   scrimColor="rgba(0, 0, 0, 0.3)"
 >
   {/* ... */}
 </ModalBottomSheet>
+```
+
+### Surface
+
+Provide the sheet’s background through the `surface` prop. The library renders
+it behind your content and sizes it natively to cover the whole sheet,
+independently of the content&nbsp;height.
+
+Decoupling the surface this way keeps the sheet covered as the content height
+changes. When content shrinks, the sheet animates to its new height without the
+background briefly exposing blank space behind the&nbsp;content.
+
+Give the surface a filling style such as `StyleSheet.absoluteFill`. It is
+mounted in a full&zwj;-&zwj;size host, so a surface sized only by its own
+content would collapse and not&nbsp;show.
+
+```tsx
+<BottomSheet // Or `ModalBottomSheet`.
+  index={index}
+  onIndexChange={setIndex}
+  surface={
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'white' }]} />
+  }
+>
+  <Text>Sheet content</Text>
+</BottomSheet>
 ```
 
 ### Scrollable negotiation
@@ -162,6 +189,7 @@ set&nbsp;`disableScrollableNegotiation`:
 <BottomSheet
   index={index}
   onIndexChange={setIndex}
+  surface={/* ... */}
   disableScrollableNegotiation
 >
   {/* ... */}
@@ -175,18 +203,20 @@ Detents are the points to which the sheet snaps. Each detent is either a number
 the available screen height). The default detents are `[0, 'content']`.
 
 Sheet children are laid out in a flex container. For a full&zwj;-&zwj;height
-sheet, apply `flex: 1` to your sheet surface and use the
-`'content'`&nbsp;detent:
+sheet, apply `flex: 1` to your content and use the `'content'`&nbsp;detent.
+`surface` is sized by the library, so `flex: 1` only ever belongs on your
+content, never on the&nbsp;surface:
 
 ```tsx
 <BottomSheet
   // `detents` defaults to `[0, 'content']`.
   index={index}
   onIndexChange={setIndex}
+  surface={
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'white' }]} />
+  }
 >
-  <View style={{ flex: 1, backgroundColor: 'white' }}>
-    {/* Full-height sheet content. */}
-  </View>
+  <View style={{ flex: 1 }}>{/* Full-height sheet content. */}</View>
 </BottomSheet>
 ```
 
@@ -209,6 +239,7 @@ const [index, setIndex] = useState(0);
   detents={[0, 300, 'content']} // Collapsed, 300 px, content height.
   index={index}
   onIndexChange={setIndex} // Keep controlled state in sync.
+  surface={/* ... */}
   onSettle={(nextIndex) => {
     if (nextIndex === 0) console.log('Sheet collapsed.');
   }}
@@ -231,6 +262,7 @@ drag snapping but can still be targeted via `index`&nbsp;updates.
   detents={[0, programmatic(300), 'content']}
   index={index}
   onIndexChange={setIndex}
+  surface={/* ... */}
   onSettle={(nextIndex) => {
     console.log(`Settled at ${nextIndex}.`);
   }}
@@ -248,6 +280,7 @@ pixels from the bottom of the screen to the top of the&nbsp;sheet).
 <BottomSheet // Or `ModalBottomSheet`.
   index={index}
   onIndexChange={setIndex}
+  surface={/* ... */}
   onPositionChange={(position) => {
     console.log(position);
   }}
@@ -267,6 +300,7 @@ const position = useSharedValue(0);
 <BottomSheet
   index={index}
   onIndexChange={setIndex}
+  surface={/* ... */}
   onPositionChange={(nextPosition) => {
     position.value = nextPosition;
   }}
