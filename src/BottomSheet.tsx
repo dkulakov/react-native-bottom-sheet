@@ -208,7 +208,26 @@ export const BottomSheet = ({
   );
 
   if (modal) {
-    return <Portal>{sheet}</Portal>;
+    return (
+      <>
+        {/*
+          A zero-size host view kept in place so anything that resolves a host
+          instance from this component finds one synchronously. The sheet itself
+          is teleported into the provider's portal and mounts a commit later, so
+          at mount this component otherwise renders nothing here. Reanimated's
+          `createAnimatedComponent` calls `findHostInstance` on mount and would
+          throw "Cannot find host instance for this component"; the anchor lets
+          `createAnimatedComponent(ModalBottomSheet)` mount, after which the
+          forwarded `ref` resolves to the real sheet view.
+        */}
+        <View
+          collapsable={false}
+          pointerEvents="none"
+          style={{ position: 'absolute', width: 0, height: 0 }}
+        />
+        <Portal>{sheet}</Portal>
+      </>
+    );
   }
 
   return sheet;
