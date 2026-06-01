@@ -3,6 +3,7 @@ import type { NativeSyntheticEvent } from 'react-native';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
+  useAnimatedStyle,
   useEvent,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -16,16 +17,14 @@ import { DemoScreen, SheetBackground, SheetHeader } from './demoShared';
 const DETENTS = [0, 360, 600];
 const MAX_POSITION = DETENTS[DETENTS.length - 1]!;
 
-// The modal renders through the provider's portal, so the library keeps an
-// in-place host anchor for `createAnimatedComponent` to resolve. This verifies
-// a worklet `onPositionChange` fires on the UI thread for a modal sheet.
-const AnimatedModalBottomSheet =
-  Animated.createAnimatedComponent(ModalBottomSheet);
+// The modal renders through the provider's portal, but `wrapNativeView` wraps the
+// native view (rendered inside that portal), so the worklet still binds to the
+// sheet at mount and onPositionChange fires on the UI thread.
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export const UIThreadModalPositionScreen = () => {
   const [index, setIndex] = useState(1);
-  const position = useSharedValue(DETENTS[index]!);
+  const position = useSharedValue(0);
 
   const onPositionChange = useEvent<
     NativeSyntheticEvent<PositionChangeEventData>
@@ -42,27 +41,42 @@ export const UIThreadModalPositionScreen = () => {
     defaultValue: '',
   }));
 
+  // A blue circle that rides the modal sheet's top edge on the UI thread.
+  const circleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -position.value }],
+  }));
+
   return (
     <DemoScreen
       title="UI-thread modal onPositionChange"
       sheet={
-        <AnimatedModalBottomSheet
-          detents={DETENTS}
-          index={index}
-          onIndexChange={setIndex}
-          onPositionChange={onPositionChange}
-          scrimColor="rgba(0, 0, 0, 0.5)"
-          surface={<SheetBackground style={StyleSheet.absoluteFill} />}
-        >
-          <SheetHeader title="UI-thread modal" onClose={() => setIndex(0)} />
-          <View style={styles.sheetBody}>
-            <Text style={styles.heading}>Drag the modal sheet</Text>
-            <Text style={styles.body}>
-              The read-out behind the scrim is updated by a Reanimated worklet
-              on the UI thread, even though the modal renders through a portal.
-            </Text>
-          </View>
-        </AnimatedModalBottomSheet>
+        <>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.circleAnchor, circleStyle]}
+          >
+            <View style={styles.circle} />
+          </Animated.View>
+          <ModalBottomSheet
+            wrapNativeView={Animated.createAnimatedComponent}
+            detents={DETENTS}
+            index={index}
+            onIndexChange={setIndex}
+            onPositionChange={onPositionChange}
+            scrimColor="rgba(0, 0, 0, 0.5)"
+            surface={<SheetBackground style={StyleSheet.absoluteFill} />}
+          >
+            <SheetHeader title="UI-thread modal" onClose={() => setIndex(0)} />
+            <View style={styles.sheetBody}>
+              <Text style={styles.heading}>Drag the modal sheet</Text>
+              <Text style={styles.body}>
+                The read-out behind the scrim is updated by a Reanimated worklet
+                on the UI thread, even though the modal renders through a
+                portal.
+              </Text>
+            </View>
+          </ModalBottomSheet>
+        </>
       }
     >
       <View style={{ gap: 12 }}>
@@ -97,4 +111,17 @@ const styles = StyleSheet.create({
   cardLabel: { fontWeight: '600', color: '#1f1f1f' },
   hint: { color: '#555' },
   readout: { fontSize: 36, fontWeight: '700', color: '#1f1f1f', padding: 0 },
+  circleAnchor: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+  },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#3b82f6',
+  },
 });
