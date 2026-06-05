@@ -21,7 +21,10 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="modal-scroll-view"
-            options={{ title: 'Modal with ScrollView', headerShown: false }}
+            options={{
+              title: 'Modal with ScrollView',
+              presentation: 'modal',
+            }}
           />
           <Stack.Screen
             name="modal-flat-list"
