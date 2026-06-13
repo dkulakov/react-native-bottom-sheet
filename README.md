@@ -208,6 +208,10 @@ Decoupling the surface this way keeps the sheet covered as the content height
 changes. When content shrinks, the sheet animates to its new height without the
 background briefly exposing blank space behind the&nbsp;content.
 
+If your sheet content animates its own height, pass
+`animateContentResize={false}` to update the sheet position immediately when the
+active `'content'` detent changes&nbsp;size.
+
 Give the surface a filling style such as `StyleSheet.absoluteFill`. It is
 mounted in a full&zwj;-&zwj;size host, so a surface sized only by its own
 content would collapse and not&nbsp;show.

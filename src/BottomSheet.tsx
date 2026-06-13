@@ -58,6 +58,13 @@ export interface BottomSheetProps {
   /** Whether the sheet should animate in on first layout. */
   animateIn?: boolean;
   /**
+   * Whether the sheet should animate when the active `'content'` detent changes
+   * height. Disable this when your content animates its own height.
+   *
+   * @default true
+   */
+  animateContentResize?: boolean;
+  /**
    * Called when a user-driven snap is initiated: the moment a drag commits to a
    * detent, before the animation settles. Does not fire for programmatic `index`
    * changes; you already know when you make those. Use it to keep your controlled
@@ -136,6 +143,7 @@ export const BottomSheet = (props: BottomSheetProps) => {
     detents = [0, 'content'],
     index,
     animateIn = true,
+    animateContentResize = true,
     onIndexChange,
     onSettle,
     onPositionChange,
@@ -227,6 +235,7 @@ export const BottomSheet = (props: BottomSheetProps) => {
           maxDetentHeight={maxHeight}
           index={index}
           animateIn={animateIn}
+          animateContentResize={animateContentResize}
           modal={modal}
           nativeOverlay={usesNativeOverlay}
           disableScrollableNegotiation={disableScrollableNegotiation}

@@ -112,6 +112,12 @@ class BottomSheetView(context: Context) : ReactViewGroup(context), LifecycleEven
       host.animateIn = value
     }
 
+  var animateContentResize: Boolean
+    get() = host.animateContentResize
+    set(value) {
+      host.animateContentResize = value
+    }
+
   var modal: Boolean
     get() = host.modal
     set(value) {

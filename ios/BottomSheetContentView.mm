@@ -35,6 +35,16 @@
   _impl.animateIn = animateIn;
 }
 
+- (BOOL)animateContentResize
+{
+  return _impl.animateContentResize;
+}
+
+- (void)setAnimateContentResize:(BOOL)animateContentResize
+{
+  _impl.animateContentResize = animateContentResize;
+}
+
 - (UIView *)sheetContainer
 {
   return _impl.sheetContainer;

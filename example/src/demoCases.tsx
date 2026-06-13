@@ -101,7 +101,7 @@ export const DEMO_CASES: DemoCase[] = [
     key: 'dynamic-content-height',
     title: 'Dynamic content height',
     description:
-      'Resize the content of a modal sheet: grow animates, shrink snaps, scrim stays opaque.',
+      'Resize the content of a modal sheet with animateContentResize toggled on and off.',
     href: '/dynamic-content-height',
   },
   {

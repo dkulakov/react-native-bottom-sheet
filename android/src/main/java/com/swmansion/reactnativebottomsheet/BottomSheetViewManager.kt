@@ -128,6 +128,11 @@ class BottomSheetViewManager :
     view.animateIn = animateIn
   }
 
+  @ReactProp(name = "animateContentResize")
+  override fun setAnimateContentResize(view: BottomSheetView, animateContentResize: Boolean) {
+    view.animateContentResize = animateContentResize
+  }
+
   @ReactProp(name = "modal")
   override fun setModal(view: BottomSheetView, modal: Boolean) {
     view.modal = modal
