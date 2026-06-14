@@ -32,28 +32,29 @@ export const NativeOverlayModalScreen = () => {
           screen—including the native modal header—instead of being trapped
           inside the modal's body.
         </Text>
-        <Button title="Open sheet" onPress={() => setIndex(1)} />
-      </View>
-
-      <ModalBottomSheet
-        nativeOverlay
-        index={index}
-        onIndexChange={setIndex}
-        scrimColor={MODAL_SCRIM_COLOR}
-        surface={<SheetBackground style={StyleSheet.absoluteFill} />}
-      >
-        <SheetHeader title="Native overlay" onClose={() => setIndex(0)} />
-        <View
-          style={{
-            height: SECTION_HEIGHT + sheetBottomPadding,
-            paddingBottom: sheetBottomPadding,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Text>Swipe down or tap scrim to dismiss</Text>
+        <View style={{ width: 200 }}>
+          <Button title="Open sheet" onPress={() => setIndex(1)} />
+          <ModalBottomSheet
+            nativeOverlay
+            index={index}
+            onIndexChange={setIndex}
+            scrimColor={MODAL_SCRIM_COLOR}
+            surface={<SheetBackground style={StyleSheet.absoluteFill} />}
+          >
+            <SheetHeader title="Native overlay" onClose={() => setIndex(0)} />
+            <View
+              style={{
+                height: SECTION_HEIGHT + sheetBottomPadding,
+                paddingBottom: sheetBottomPadding,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text>Swipe down or tap scrim to dismiss</Text>
+            </View>
+          </ModalBottomSheet>
         </View>
-      </ModalBottomSheet>
+      </View>
     </View>
   );
 };
