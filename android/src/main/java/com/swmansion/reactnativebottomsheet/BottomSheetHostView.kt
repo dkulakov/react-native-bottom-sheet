@@ -675,16 +675,12 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
           }
           if (!isAtMaxDragCandidate(targetIndex)) {
             lastTouchY = y
-            // Cancel in-flight JS touches. React Native's JSTouchDispatcher
-            // processes events at the root view level before onInterceptTouchEvent
-            // runs, so without this the JS side never sees a cancel and Pressable
-            // would still fire onPress.
-            notifyNativeGestureStarted(event)
+            announceGestureTakeover(event)
             return true
           }
           if (dy > 0 && isScrollViewAtTop()) {
             lastTouchY = y
-            notifyNativeGestureStarted(event)
+            announceGestureTakeover(event)
             return true
           }
         }
@@ -799,6 +795,20 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
       it.cancel()
       activeAnimation = null
     }
+  }
+
+  // Announce to ancestors that the sheet is taking over the touch stream. The
+  // press "decider" for any child lives above us, so both signals travel up:
+  //   - onChildStartedNativeGesture cancels React Native's own JS touch
+  //     pipeline (JSTouchDispatcher), covering Pressable/Touchable.
+  //   - requestDisallowInterceptTouchEvent(true) is the standard Android
+  //     handshake honored by ancestor gesture systems such as
+  //     react-native-gesture-handler's orchestrator, which would otherwise
+  //     still recognize a tap on a native button mid-drag. The flag is cleared
+  //     automatically on the next ACTION_DOWN.
+  private fun announceGestureTakeover(event: MotionEvent) {
+    notifyNativeGestureStarted(event)
+    requestDisallowInterceptTouchEvent(true)
   }
 
   private fun notifyNativeGestureStarted(event: MotionEvent) {
