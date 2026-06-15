@@ -245,7 +245,7 @@ class BottomSheetView(context: Context) : ReactViewGroup(context), LifecycleEven
   }
 
   private fun currentEventDispatcher(): EventDispatcher? =
-    UIManagerHelper.getEventDispatcher(UIManagerHelper.getReactContext(this))
+    UIManagerHelper.getEventDispatcherForReactTag(UIManagerHelper.getReactContext(this), id)
 
   private fun configureOverlayWindow(window: Window, activity: Activity) {
     window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))

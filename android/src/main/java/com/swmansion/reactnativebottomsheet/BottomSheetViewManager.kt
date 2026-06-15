@@ -59,7 +59,7 @@ class BottomSheetViewManager :
   private fun dispatchEvent(view: BottomSheetView, eventName: String, eventData: WritableMap) {
     val reactContext = UIManagerHelper.getReactContext(view)
     val surfaceId = UIManagerHelper.getSurfaceId(view)
-    UIManagerHelper.getEventDispatcher(reactContext)
+    UIManagerHelper.getEventDispatcherForReactTag(reactContext, view.id)
       ?.dispatchEvent(BottomSheetEvent(surfaceId, view.id, eventName, eventData))
   }
 
@@ -82,7 +82,8 @@ class BottomSheetViewManager :
     stateWrapper: StateWrapper?,
   ): Any? {
     view.stateWrapper = stateWrapper
-    view.eventDispatcher = UIManagerHelper.getEventDispatcher(UIManagerHelper.getReactContext(view))
+    view.eventDispatcher =
+      UIManagerHelper.getEventDispatcherForReactTag(UIManagerHelper.getReactContext(view), view.id)
     return null
   }
 
