@@ -675,7 +675,6 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
           }
           if (!isAtMaxDragCandidate(targetIndex)) {
             lastTouchY = y
-            requestDisallowInterceptTouchEvent(false)
             // Cancel in-flight JS touches. React Native's JSTouchDispatcher
             // processes events at the root view level before onInterceptTouchEvent
             // runs, so without this the JS side never sees a cancel and Pressable
@@ -685,7 +684,6 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
           }
           if (dy > 0 && isScrollViewAtTop()) {
             lastTouchY = y
-            requestDisallowInterceptTouchEvent(false)
             notifyNativeGestureStarted(event)
             return true
           }
