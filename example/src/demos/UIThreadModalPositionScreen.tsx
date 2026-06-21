@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, {
@@ -26,6 +26,12 @@ const MAX_POSITION = DETENTS[DETENTS.length - 1]!;
 // native view (rendered inside that portal), so the worklet still binds to the
 // sheet at mount and onPositionChange fires on the UI thread.
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+// Reanimated's `createAnimatedComponent` overloads are wider than the
+// `wrapNativeView` prop type; the cast keeps it a stable module-level reference.
+const wrapNativeView = Animated.createAnimatedComponent as ComponentProps<
+  typeof ModalBottomSheet
+>['wrapNativeView'];
 
 export const UIThreadModalPositionScreen = () => {
   const [index, setIndex] = useState(1);
@@ -80,7 +86,7 @@ export const UIThreadModalPositionScreen = () => {
             <View style={styles.circle} />
           </Animated.View>
           <ModalBottomSheet
-            wrapNativeView={Animated.createAnimatedComponent}
+            wrapNativeView={wrapNativeView}
             detents={DETENTS}
             index={index}
             onIndexChange={setIndex}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, {
@@ -27,6 +27,12 @@ const MAX_POSITION = DETENTS[DETENTS.length - 1]!;
 // view itself. onPositionChange is a standard native event, so a useEvent
 // worklet runs on the UI thread, synchronously, as the sheet moves—no cast.
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+// Reanimated's `createAnimatedComponent` overloads are wider than the
+// `wrapNativeView` prop type; the cast keeps it a stable module-level reference.
+const wrapNativeView = Animated.createAnimatedComponent as ComponentProps<
+  typeof BottomSheet
+>['wrapNativeView'];
 
 export const UIThreadPositionScreen = () => {
   const [index, setIndex] = useState(1);
@@ -93,7 +99,7 @@ export const UIThreadPositionScreen = () => {
             <View style={styles.markerDot} />
           </Animated.View>
           <BottomSheet
-            wrapNativeView={Animated.createAnimatedComponent}
+            wrapNativeView={wrapNativeView}
             detents={DETENTS}
             index={index}
             onIndexChange={setIndex}
