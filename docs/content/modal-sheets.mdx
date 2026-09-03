@@ -46,12 +46,10 @@ By default, the scrim fades in as the sheet opens and then holds at full
 opacity, so detents above the first share the same scrim. Use `scrimOpacities`
 to control the opacity at each detent: It takes one value in 0–1 per detent,
 indexed to match `detents`, and interpolates linearly as the sheet is dragged
-between them. A shorter array reuses its last value for any
-remaining detents.
+between them. A shorter array reuses its last value for any remaining detents.
 
 The default maps each detent to 0 when it is closed and 1 otherwise, so the
-scrim is transparent at any closed detent and fully opaque at every
-open one.
+scrim is transparent at any closed detent and fully opaque at every open one.
 
 To keep the scrim deepening across every detent, pass one value per detent:
 
@@ -67,6 +65,87 @@ To keep the scrim deepening across every detent, pass one value per detent:
   {/* ... */}
 </ModalBottomSheet>
 ```
+
+## Android close requests
+
+`onCloseRequest` is **Android only**. Android system Back, a committed
+predictive Back gesture, and a complete, unmodified physical-keyboard Escape
+press use the same close request callback. The callback reports the request but
+does not change the controlled `index`, choose a detent, or dismiss the sheet.
+The consumer decides whether and how to close it.
+
+To close a sheet in response, update `index` to a zero-height detent:
+
+```tsx
+const [index, setIndex] = useState(1);
+
+<ModalBottomSheet
+  detents={[0, 400]}
+  index={index}
+  onIndexChange={setIndex}
+  onCloseRequest={() => setIndex(0)}
+>
+  {/* content */}
+</ModalBottomSheet>;
+```
+
+### Input behavior
+
+The callback runs after a regular Back action or predictive Back commit.
+Predictive gesture progress does not animate the sheet, and cancelling the
+gesture does not invoke the callback. Escape emits once for a completed,
+unmodified physical-key press; modified, repeated, incomplete, or cancelled
+sequences do not emit additional requests.
+
+When the consumer starts a visible animation to a closed target, the sheet
+continues to consume Back/Escape input without another callback until the
+animation settles. The next input is then routed to the next eligible sheet or
+to the host application. A no-op handler likewise consumes eligible input while
+leaving the sheet open.
+
+### Presentation ordering
+
+Portal presentations in the same Android window follow their portal order. The
+topmost active portal receives the close request. A portal whose target is
+initially unresolved, already settled at zero height, or closed without a
+visible animation is skipped. A portal that is visibly animating closed remains
+active until settle, so a lower portal is not promoted early.
+
+An active top portal without `onCloseRequest` still blocks callbacks on lower
+portals. Back continues beyond the portal group, while Escape remains available
+to normal key handling. `nativeOverlay` is hosted in a separate window and does
+not participate in portal ordering. With a handler it forms the same modal
+boundary; without one it forwards Back to the host Activity and leaves Escape in
+normal key routing.
+
+That priority is retained while the top portal remains visibly closing. With no
+handler, it continues to block lower callbacks until settle while preserving the
+same Back pass-through and normal Escape behavior.
+
+### Target eligibility
+
+Eligibility is based on the resolved native target height, not the detent index
+or current animated position. Numeric `0`, `0%`, and `programmatic(0)` are
+closed targets. A `content` target becomes eligible only after measurement
+resolves it above zero. A sheet with no zero-height detent, such as
+`detents={[300, 600]}`, remains eligible at every target; the consumer can
+unmount it or change its detents if the close request should make it disappear.
+
+### Limitations
+
+Portal Escape handling is reliable while focus is inside the portal tree. When
+focus is elsewhere, a focused view can consume Escape first, so external-focus
+Escape is best effort. Use `nativeOverlay` with `onCloseRequest` when Escape
+must be owned by a separate window.
+
+On Android API 24–27, the external-focus fallback is supported for standard
+React Native and AndroidX hosts based on `ReactActivity`, `AppCompatActivity`,
+or `ComponentActivity`. Custom hosts and custom window callbacks can intercept
+key events before the portal receives them.
+
+Inline `BottomSheet`, iOS physical-keyboard Escape, accessibility dismiss
+actions, scrim taps, drag gestures, and programmatic index changes are outside
+this callback and keep their existing behavior.
 
 ## Native overlay
 

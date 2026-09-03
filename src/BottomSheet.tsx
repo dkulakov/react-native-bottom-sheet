@@ -150,6 +150,8 @@ export interface BottomSheetProps {
 type ModalOnlyBottomSheetProps = {
   /** Internal flag used by `ModalBottomSheet`. */
   modal?: boolean;
+  /** Android-only controlled close request callback used by `ModalBottomSheet`. */
+  onCloseRequest?: () => void;
   /**
    * Internal flag used by `ModalBottomSheet`. When set, the sheet is presented
    * in a native overlay above everything (including native modal screens)
@@ -191,6 +193,7 @@ export const BottomSheet = (props: BottomSheetProps) => {
     onIndexChange,
     onSettle,
     onPositionChange,
+    onCloseRequest,
     wrapNativeView,
     modal = false,
     nativeOverlay = false,
@@ -229,6 +232,7 @@ export const BottomSheet = (props: BottomSheetProps) => {
 
   const selectedNormalizedDetent = normalizedDetents[index]!;
   const isSheetClosed = isNormalizedDetentClosed(selectedNormalizedDetent);
+  const hasCloseRequestHandler = onCloseRequest != null;
   // Default the scrim opacity per detent: transparent at any closed detent,
   // fully opaque at every open one.
   const resolvedScrimOpacities =
@@ -292,6 +296,7 @@ export const BottomSheet = (props: BottomSheetProps) => {
           animateContentHeight={animateContentHeight}
           modal={modal}
           nativeOverlay={usesNativeOverlay}
+          hasCloseRequestHandler={hasCloseRequestHandler}
           scrollableExpandNegotiation={
             SCROLLABLE_NEGOTIATION_LEVEL[resolvedExpandNegotiation]
           }
@@ -303,6 +308,7 @@ export const BottomSheet = (props: BottomSheetProps) => {
           onIndexChange={handleIndexChange}
           onSettle={handleSettle}
           onPositionChange={onPositionChange}
+          onCloseRequest={onCloseRequest}
         >
           {surface != null && (
             <BottomSheetSurfaceNativeComponent

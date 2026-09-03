@@ -6,8 +6,17 @@ import {
   type BottomSheetProps,
 } from './BottomSheet';
 
-/** Props for the modal bottom-sheet variant rendered through the provider portal. */
+/** Props for the modal bottom-sheet variant, presented through a portal by default. */
 export interface ModalBottomSheetProps extends BottomSheetProps {
+  /**
+   * Android only. Called when Android system Back, a committed predictive Back
+   * gesture, or a complete, unmodified physical Escape press requests that an
+   * open sheet close. This is a controlled request: the sheet does not change
+   * its `index` or choose a transition. The consumer decides whether and how to
+   * close it. While a visible sheet is animating to a closed target, further
+   * Back/Escape input is consumed without another callback until settle.
+   */
+  onCloseRequest?: () => void;
   /**
    * Present the sheet in a native overlay above everything—including native
    * modal screens (e.g. a React Navigation native-stack `presentation: "modal"`)

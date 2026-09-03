@@ -55,6 +55,13 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="close-request"
+              options={{
+                title: 'Android close requests',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="modal-scroll-view"
               options={{ title: 'Modal with ScrollView', headerShown: false }}
             />
