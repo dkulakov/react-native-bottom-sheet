@@ -72,6 +72,13 @@ android {
   }
 }
 
+tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+  // Robolectric requires Java 21 when a unit test targets Android API 36.
+  javaLauncher = javaToolchains.launcherFor {
+    languageVersion = org.gradle.jvm.toolchain.JavaLanguageVersion.of(21)
+  }
+}
+
 dependencies {
   implementation "com.facebook.react:react-android"
   // Minimum for predictive Back, including callback-addition and restarted-gesture fixes.
