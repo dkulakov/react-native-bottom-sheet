@@ -82,8 +82,8 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
 
   /**
    * Notified whenever the sheet's interactivity changes (true while it is animating, being dragged,
-   * or showing its scrim). In native-overlay mode the coordinator uses this to toggle the host
-   * dialog window's touchability so taps fall through to the screen behind while the sheet is
+   * or presented at an open detent). In native-overlay mode the coordinator uses this to toggle the
+   * host dialog window's touchability so taps fall through to the screen behind while the sheet is
    * closed.
    */
   var interactionListener: ((Boolean) -> Unit)? = null
@@ -1767,7 +1767,13 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   }
 
   internal val isInteractive: Boolean
-    get() = modal && (activeAnimation != null || isPanning || isScrimVisible())
+    // Follow the sheet, not the scrim: scrim opacity is styling, so a modal sheet configured with
+    // a transparent scrim is still presented and must keep receiving touches.
+    get() =
+      modal &&
+        (activeAnimation != null ||
+          isPanning ||
+          (!isTargetingClosedDetent && currentSheetHeight() > 0.5f))
 
   private fun updateInteractionState() {
     val interactive = isInteractive
