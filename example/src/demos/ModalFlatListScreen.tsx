@@ -1,5 +1,11 @@
+import {
+  Button,
+  FlatList,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useState } from 'react';
-import { Button, FlatList, StyleSheet } from 'react-native';
 import { ModalBottomSheet } from '@swmansion/react-native-bottom-sheet';
 
 import {
@@ -12,9 +18,14 @@ import {
   useSheetBottomPadding,
 } from '../demoShared';
 
+const TABLET_WIDTH = 600;
+
 export const ModalFlatListScreen = () => {
   const [index, setIndex] = useState(0);
   const sheetBottomPadding = useSheetBottomPadding();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const maxLength = Math.max(windowWidth, windowHeight);
+  const isTablet = maxLength >= TABLET_WIDTH;
 
   return (
     <DemoScreen
@@ -22,22 +33,43 @@ export const ModalFlatListScreen = () => {
       sheet={
         <ModalBottomSheet
           index={index}
+          detents={[0, '50%', '100%']}
           onIndexChange={setIndex}
           scrimColor={MODAL_SCRIM_COLOR}
-          surface={<SheetBackground style={StyleSheet.absoluteFill} />}
+          surface={
+            <SheetBackground
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  width: isTablet ? TABLET_WIDTH : '100%',
+                  marginHorizontal: isTablet
+                    ? (windowWidth - TABLET_WIDTH) / 2
+                    : 0,
+                },
+              ]}
+            />
+          }
         >
-          <SheetHeader
-            title="Modal with FlatList"
-            onClose={() => setIndex(0)}
-          />
-          <FlatList
-            data={DATA}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ paddingBottom: sheetBottomPadding }}
-            renderItem={({ item, index: itemIndex }) => (
-              <ListRow item={item} index={itemIndex} />
-            )}
-          />
+          <View
+            style={{
+              flex: 1,
+              width: isTablet ? TABLET_WIDTH : '100%',
+              marginHorizontal: isTablet ? (windowWidth - TABLET_WIDTH) / 2 : 0,
+            }}
+          >
+            <SheetHeader
+              title="Modal with FlatList"
+              onClose={() => setIndex(0)}
+            />
+            <FlatList
+              data={DATA}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingBottom: sheetBottomPadding }}
+              renderItem={({ item, index: itemIndex }) => (
+                <ListRow item={item} index={itemIndex} />
+              )}
+            />
+          </View>
         </ModalBottomSheet>
       }
     >
