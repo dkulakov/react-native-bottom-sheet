@@ -1,4 +1,5 @@
 export type CaseKey =
+  | 'scrim-pressables'
   | 'basic-modal'
   | 'lazy-mounted-modal'
   | 'native-overlay-modal'
@@ -35,6 +36,11 @@ export type DemoCase = {
 };
 
 export const DEMO_CASES: DemoCase[] = [
+  {
+    key: 'scrim-pressables',
+    title: 'Scrim press isolation',
+    href: '/scrim-pressables',
+  },
   {
     key: 'basic-modal',
     title: 'Basic modal',

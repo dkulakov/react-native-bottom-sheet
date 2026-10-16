@@ -1114,6 +1114,9 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
         activePointerId = event.getPointerId(0)
         scrimPressed = true
         scrimTouchActive = true
+        // Interception alone does not cancel RNGH handlers on views beneath the scrim:
+        // their recognizers run at an ancestor, which must also yield the touch stream.
+        announceGestureTakeover(event)
         return true
       }
       return false

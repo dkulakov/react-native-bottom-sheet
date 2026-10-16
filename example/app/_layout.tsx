@@ -18,6 +18,10 @@ export default function RootLayout() {
           >
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen
+              name="scrim-pressables"
+              options={{ title: 'Scrim press isolation', headerShown: false }}
+            />
+            <Stack.Screen
               name="basic-modal"
               options={{ title: 'Basic modal', headerShown: false }}
             />
