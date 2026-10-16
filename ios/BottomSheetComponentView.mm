@@ -140,11 +140,13 @@ using namespace facebook::react;
     [_sheetView setExtendUnderStatusBar:newViewProps.extendUnderStatusBar];
   }
 
-  if (newViewProps.scrollableExpandNegotiation != oldViewProps.scrollableExpandNegotiation) {
+  // Compare against native state: codegen defaults to 0 (none), while the
+  // hosting view defaults to handoff/initial, so a props diff can skip none.
+  if (newViewProps.scrollableExpandNegotiation != _sheetView.scrollableExpandNegotiation) {
     _sheetView.scrollableExpandNegotiation = newViewProps.scrollableExpandNegotiation;
   }
 
-  if (newViewProps.scrollableCollapseNegotiation != oldViewProps.scrollableCollapseNegotiation) {
+  if (newViewProps.scrollableCollapseNegotiation != _sheetView.scrollableCollapseNegotiation) {
     _sheetView.scrollableCollapseNegotiation = newViewProps.scrollableCollapseNegotiation;
   }
 
