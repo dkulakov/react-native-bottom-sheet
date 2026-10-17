@@ -1649,7 +1649,10 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
         var childY = y + view.scrollY - child.top
         val childMatrix = child.matrix
         if (!childMatrix.isIdentity) {
-          childMatrix.invert(hitTestInverseMatrix)
+          // A non-invertible matrix (scale 0) leaves the inverse untouched, so
+          // mapping with it would use another view's inverse. Such a child has
+          // no area and cannot be hit; skip it like TouchTargetHelper does.
+          if (!childMatrix.invert(hitTestInverseMatrix)) continue
           hitTestPoint[0] = childX
           hitTestPoint[1] = childY
           hitTestInverseMatrix.mapPoints(hitTestPoint)
