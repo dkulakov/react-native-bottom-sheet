@@ -113,7 +113,7 @@ class BottomSheetViewManager :
           "value" to map.getDouble("value"),
           "kind" to (map.getString("kind") ?: "points"),
           "programmatic" to map.getBoolean("programmatic"),
-        )
+        ),
       )
     }
     view.setDetents(list)

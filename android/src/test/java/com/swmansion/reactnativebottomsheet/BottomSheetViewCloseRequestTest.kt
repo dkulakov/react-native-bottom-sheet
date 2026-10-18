@@ -99,13 +99,13 @@ class BottomSheetViewCloseRequestTest {
       val downTime = 90L
       assertTrue(
         focusedView.dispatchKeyEvent(
-          KeyEvent(downTime, downTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A, 0)
-        )
+          KeyEvent(downTime, downTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A, 0),
+        ),
       )
       assertTrue(
         focusedView.dispatchKeyEvent(
-          KeyEvent(downTime, downTime + 1, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_A, 0)
-        )
+          KeyEvent(downTime, downTime + 1, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_A, 0),
+        ),
       )
       assertEquals(2, focusedView.ordinaryEventCount)
       assertEquals(0, listener.closeRequestCount)
@@ -251,7 +251,7 @@ class BottomSheetViewCloseRequestTest {
               mapOf("value" to 0.0, "kind" to "points", "programmatic" to false),
               mapOf("value" to 0.0, "kind" to "points", "programmatic" to false),
               mapOf("value" to 300.0, "kind" to "points", "programmatic" to false),
-            )
+            ),
           )
           setIndex(2)
         }
@@ -492,7 +492,7 @@ class BottomSheetViewCloseRequestTest {
         listOf(
           mapOf("value" to 0.0, "kind" to "points", "programmatic" to false),
           mapOf("value" to 300.0, "kind" to "points", "programmatic" to false),
-        )
+        ),
       )
       setIndex(1)
     }

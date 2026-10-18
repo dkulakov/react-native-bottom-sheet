@@ -129,13 +129,13 @@ class PortalCloseRequestCoordinatorTest {
           portalState(
             routingOwnerCandidate = true,
             action = CloseRequestInputAction.CONSUME,
-          )
+          ),
         )
         registration.update(
           portalState(
             routingOwnerCandidate = true,
             action = CloseRequestInputAction.EMIT_CLOSE_REQUEST,
-          )
+          ),
         )
 
         assertEquals(

@@ -79,7 +79,7 @@ class BottomSheetViewManagerIndexTest {
             "animateIn" to false,
             "detents" to initialDetents,
             "index" to index.toDouble(),
-          )
+          ),
         ),
       )
       controller.get().setContentView(sheet)
@@ -96,7 +96,7 @@ class BottomSheetViewManagerIndexTest {
 
   private fun detents(vararg values: Double) =
     JavaOnlyArray.from(
-      values.map { JavaOnlyMap.of("value", it, "kind", "points", "programmatic", false) }
+      values.map { JavaOnlyMap.of("value", it, "kind", "points", "programmatic", false) },
     )
 
   private fun props(entries: List<Pair<String, Any>>) = ReactStylesDiffMap(OrderedProps(entries))

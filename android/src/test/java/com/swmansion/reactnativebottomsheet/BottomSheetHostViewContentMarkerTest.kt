@@ -103,7 +103,7 @@ class BottomSheetHostViewContentMarkerTest {
         listOf(
           mapOf("value" to 0.0, "kind" to "points", "programmatic" to false),
           mapOf("value" to 0.0, "kind" to "content", "programmatic" to false),
-        )
+        ),
       )
       sheet.setIndex(1)
       sheet.addSheetChild(wrapper, 0)

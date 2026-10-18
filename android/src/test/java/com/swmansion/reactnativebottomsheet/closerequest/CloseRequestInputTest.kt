@@ -160,7 +160,7 @@ class CloseRequestInputTest {
           emissionCount++
           true
         },
-      )
+      ),
     )
     dispatcher.degradeCapturedCloseRequest()
     assertTrue(
@@ -171,7 +171,7 @@ class CloseRequestInputTest {
           emissionCount++
           true
         },
-      )
+      ),
     )
     assertEquals(0, emissionCount)
 
@@ -183,7 +183,7 @@ class CloseRequestInputTest {
           emissionCount++
           true
         },
-      )
+      ),
     )
     assertFalse(
       dispatcher.dispatch(
@@ -193,7 +193,7 @@ class CloseRequestInputTest {
           emissionCount++
           true
         },
-      )
+      ),
     )
     assertEquals(0, emissionCount)
   }
@@ -211,7 +211,7 @@ class CloseRequestInputTest {
           emissionCount++
           true
         },
-      )
+      ),
     )
     assertEquals(0, emissionCount)
     assertTrue(
@@ -222,7 +222,7 @@ class CloseRequestInputTest {
           emissionCount++
           true
         },
-      )
+      ),
     )
     assertEquals(1, emissionCount)
   }
@@ -241,14 +241,14 @@ class CloseRequestInputTest {
         event = escapeDown(210L, metaState = KeyEvent.META_SHIFT_ON),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertFalse(
       dispatcher.dispatch(
         event = escapeUp(210L, metaState = KeyEvent.META_SHIFT_ON),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
 
     assertTrue(
@@ -256,14 +256,14 @@ class CloseRequestInputTest {
         event = escapeDown(220L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeDown(220L, repeatCount = 1),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(0, emissionCount)
     assertTrue(
@@ -271,7 +271,7 @@ class CloseRequestInputTest {
         event = escapeUp(220L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(1, emissionCount)
 
@@ -280,14 +280,14 @@ class CloseRequestInputTest {
         event = escapeDown(230L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeUp(230L, metaState = KeyEvent.META_SHIFT_ON),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(1, emissionCount)
   }
@@ -306,21 +306,21 @@ class CloseRequestInputTest {
         event = escapeDown(240L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeDown(241L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeUp(241L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(1, emissionCount)
 
@@ -329,14 +329,14 @@ class CloseRequestInputTest {
         event = escapeDown(242L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeUp(242L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(2, emissionCount)
   }
@@ -355,7 +355,7 @@ class CloseRequestInputTest {
         event = escapeUp(250L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(0, emissionCount)
     assertTrue(
@@ -363,14 +363,14 @@ class CloseRequestInputTest {
         event = escapeDown(251L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeUp(251L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(1, emissionCount)
   }
@@ -389,7 +389,7 @@ class CloseRequestInputTest {
         event = escapeDown(260L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(dispatcher.hasCapturedPress)
     assertTrue(
@@ -397,7 +397,7 @@ class CloseRequestInputTest {
         event = escapeUp(260L, flags = KeyEvent.FLAG_CANCELED),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(0, emissionCount)
     assertFalse(dispatcher.hasCapturedPress)
@@ -407,14 +407,14 @@ class CloseRequestInputTest {
         event = escapeDown(261L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertTrue(
       dispatcher.dispatch(
         event = escapeUp(261L),
         resolveInitialAction = { CloseRequestInputAction.EMIT_CLOSE_REQUEST },
         emitCloseRequestIfEligible = emitCloseRequest,
-      )
+      ),
     )
     assertEquals(1, emissionCount)
   }

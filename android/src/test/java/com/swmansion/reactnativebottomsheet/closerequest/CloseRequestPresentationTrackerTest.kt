@@ -15,13 +15,13 @@ class CloseRequestPresentationTrackerTest {
       tracker.isPresentationActive(
         isTargetDetentOpen = false,
         isCloseRequestLayoutReady = true,
-      )
+      ),
     )
     assertFalse(
       tracker.isPresentationActive(
         isTargetDetentOpen = false,
         isCloseRequestLayoutReady = false,
-      )
+      ),
     )
   }
 
@@ -36,7 +36,7 @@ class CloseRequestPresentationTrackerTest {
       tracker.isPresentationActive(
         isTargetDetentOpen = false,
         isCloseRequestLayoutReady = true,
-      )
+      ),
     )
   }
 
@@ -50,7 +50,7 @@ class CloseRequestPresentationTrackerTest {
       tracker.isPresentationActive(
         isTargetDetentOpen = false,
         isCloseRequestLayoutReady = true,
-      )
+      ),
     )
   }
 
@@ -65,13 +65,13 @@ class CloseRequestPresentationTrackerTest {
       tracker.isPresentationActive(
         isTargetDetentOpen = true,
         isCloseRequestLayoutReady = true,
-      )
+      ),
     )
     assertFalse(
       tracker.isPresentationActive(
         isTargetDetentOpen = false,
         isCloseRequestLayoutReady = true,
-      )
+      ),
     )
   }
 
@@ -91,7 +91,7 @@ class CloseRequestPresentationTrackerTest {
           tracker.isPresentationActive(
             isTargetDetentOpen = false,
             isCloseRequestLayoutReady = true,
-          )
+          ),
         )
       }
   }

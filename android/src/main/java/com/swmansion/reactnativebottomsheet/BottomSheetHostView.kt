@@ -548,7 +548,7 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       previousHeight?.let {
         if (height < it) {
           throw IllegalArgumentException(
-            "Invalid bottom sheet detent at index $index: resolved height ${height / density} is lower than previous detent height ${it / density}. Detents must be passed in ascending order."
+            "Invalid bottom sheet detent at index $index: resolved height ${height / density} is lower than previous detent height ${it / density}. Detents must be passed in ascending order.",
           )
         }
       }
@@ -1273,7 +1273,7 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
 
   private fun negotiationLevel(expanding: Boolean): ScrollableNegotiationLevel =
     ScrollableNegotiationLevel.from(
-      if (expanding) scrollableExpandNegotiation else scrollableCollapseNegotiation
+      if (expanding) scrollableExpandNegotiation else scrollableCollapseNegotiation,
     )
 
   private val hasAnyHandoffNegotiation: Boolean
