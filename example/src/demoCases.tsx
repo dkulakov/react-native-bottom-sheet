@@ -8,6 +8,7 @@ export type CaseKey =
   | 'native-overlay-keyboard-input'
   | 'close-request'
   | 'modal-scroll-view'
+  | 'draggable-grabber'
   | 'modal-flat-list'
   | 'fixed-detent-scroll-view'
   | 'keyboard-content-detent'
@@ -24,6 +25,7 @@ export type CaseKey =
   | 'percentage-detents'
   | 'dynamic-detents'
   | 'dynamic-content-height'
+  | 'z-indexed-content'
   | 'snap-callbacks'
   | 'no-animate-in'
   | 'ui-thread-position'
@@ -81,6 +83,11 @@ export const DEMO_CASES: DemoCase[] = [
     key: 'modal-scroll-view',
     title: 'Modal with ScrollView',
     href: '/modal-scroll-view',
+  },
+  {
+    key: 'draggable-grabber',
+    title: 'Draggable grabber',
+    href: '/draggable-grabber',
   },
   {
     key: 'modal-flat-list',
@@ -162,6 +169,11 @@ export const DEMO_CASES: DemoCase[] = [
     key: 'dynamic-content-height',
     title: 'Dynamic content height',
     href: '/dynamic-content-height',
+  },
+  {
+    key: 'z-indexed-content',
+    title: 'Content with zIndex children',
+    href: '/z-indexed-content',
   },
   {
     key: 'snap-callbacks',

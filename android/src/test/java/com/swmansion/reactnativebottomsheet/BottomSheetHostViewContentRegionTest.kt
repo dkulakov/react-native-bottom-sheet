@@ -6,6 +6,7 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.facebook.react.R
 import com.facebook.react.bridge.ReadableNativeMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.mapbuffer.ReadableMapBuffer
@@ -359,12 +360,15 @@ private class RecordingSheetListener : BottomSheetViewListener {
 /**
  * Stands in for the Fabric-measured content wrapper. The sheet owns its children's placement
  * (`needsCustomLayoutForChildren`), so Fabric only measures the wrapper: [applyFabricMeasure] does
- * the same, and the host's layout pass places it. Its last child is the marker the host measures
+ * the same, and the host's layout pass places it. Its tagged child is the marker the host measures
  * content by: filling content keeps the marker at the region's end; intrinsic content pins it at
  * [markerTopPx].
  */
 private class RegionContentView(context: Context) : ViewGroup(context) {
-  private val marker = View(context)
+  private val marker =
+    View(context).apply {
+      setTag(R.id.view_tag_native_id, BottomSheetHostView.CONTENT_HEIGHT_MARKER_NATIVE_ID)
+    }
   var markerTopPx = 0
 
   init {
