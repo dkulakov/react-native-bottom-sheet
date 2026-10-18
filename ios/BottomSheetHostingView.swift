@@ -65,11 +65,11 @@ private final class ActiveScrollViewState {
 
   init(scrollView: UIScrollView, inverted: Bool) {
     self.scrollView = scrollView
-    self.pinnedOffset = scrollView.contentOffset
+    pinnedOffset = scrollView.contentOffset
     self.inverted = inverted
-    self.bounces = scrollView.bounces
-    self.directionalLockEnabled = scrollView.isDirectionalLockEnabled
-    self.showsVerticalScrollIndicator = scrollView.showsVerticalScrollIndicator
+    bounces = scrollView.bounces
+    directionalLockEnabled = scrollView.isDirectionalLockEnabled
+    showsVerticalScrollIndicator = scrollView.showsVerticalScrollIndicator
   }
 
   func startPinning(at offset: CGPoint) {
@@ -272,7 +272,9 @@ public final class BottomSheetHostingView: UIView {
           break
         }
       }
-      if surfaceTouchHandler != nil { break }
+      if surfaceTouchHandler != nil {
+        break
+      }
       current = view.superview
     }
     flushPendingSnapIfNeeded()
@@ -283,7 +285,9 @@ public final class BottomSheetHostingView: UIView {
     guard bounds.width > 0, bounds.height > 0 else { return }
     // See refreshDetentsFromLayout: without a window the detent cap falls back
     // to the full height, which must not be applied to the container geometry.
-    if hasLaidOut, window == nil { return }
+    if hasLaidOut, window == nil {
+      return
+    }
 
     scrimView.frame = bounds
     refreshDetentsFromLayout()
@@ -331,7 +335,9 @@ public final class BottomSheetHostingView: UIView {
       return
     }
 
-    if activeSpring != nil || isPanning { return }
+    if activeSpring != nil || isPanning {
+      return
+    }
     sheetContainer.transform = CGAffineTransform(translationX: 0, y: translationY(for: targetIndex))
     updateScrim()
   }
@@ -977,7 +983,7 @@ public final class BottomSheetHostingView: UIView {
         let velocity = gesture.velocity(in: self).y
         if
           activeScrollableNegotiationLevel == .handoff,
-          isAtLargestDetent && (velocity < 0 || !activeScrollViewsAreAtStart())
+          isAtLargestDetent, velocity < 0 || !activeScrollViewsAreAtStart()
         {
           panCoordinationMode = .scrollView
         } else {
@@ -1211,8 +1217,14 @@ public final class BottomSheetHostingView: UIView {
   /// test as if it were on so a grab mid-settle still resolves the content.
   private func touchTarget(at location: CGPoint) -> UIView? {
     let wasDisabled = isContentInteractionDisabled
-    if wasDisabled { setContentInteractionEnabled(true) }
-    defer { if wasDisabled { setContentInteractionEnabled(false) } }
+    if wasDisabled {
+      setContentInteractionEnabled(true)
+    }
+    defer {
+      if wasDisabled {
+        setContentInteractionEnabled(false)
+      }
+    }
     return sheetContainer.hitTest(location, with: nil)
   }
 
@@ -1722,7 +1734,9 @@ extension BottomSheetHostingView: UIGestureRecognizerDelegate {
     shouldBeRequiredToFailBy other: UIGestureRecognizer
   ) -> Bool {
     guard gestureRecognizer === panGesture else { return false }
-    if canCoordinate(with: other) { return false }
+    if canCoordinate(with: other) {
+      return false
+    }
     return other is UIPanGestureRecognizer || other is UITapGestureRecognizer
   }
 
@@ -1843,8 +1857,12 @@ private extension BottomSheetHostingView {
       .sorted { $0.height < $1.height }
 
     guard let first = pairs.first, let last = pairs.last else { return 0 }
-    if position <= first.height { return first.value }
-    if position >= last.height { return last.value }
+    if position <= first.height {
+      return first.value
+    }
+    if position >= last.height {
+      return last.value
+    }
 
     for i in 1 ..< pairs.count where position <= pairs[i].height {
       let lower = pairs[i - 1]
