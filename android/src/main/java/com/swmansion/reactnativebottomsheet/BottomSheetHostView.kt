@@ -89,6 +89,11 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       if (value == null) {
         lastSentStateSnapshot = null
       } else {
+        // The wrapper carries the state Fabric just committed, i.e. the
+        // content-region inset the content is now laid out against.
+        value.stateData
+          ?.takeIf { it.hasKey("contentRegionInset") }
+          ?.let { onContentRegionStateCommitted(it.getDouble("contentRegionInset")) }
         pushStateSnapshot()
         recomputeNativeGeometry()
       }
@@ -415,6 +420,7 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   // MARK: - Prop setters
 
   fun setDetents(raw: List<Map<String, Any>>) {
+    val previousTallestDetent = rawDetentSpecs.lastOrNull()
     rawDetentSpecs = raw.mapNotNull { dict ->
       val value = (dict["value"] as? Number)?.toDouble() ?: return@mapNotNull null
       val kind =
@@ -428,6 +434,17 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
         if (kind == DetentKind.POINTS) (value * density).toFloat() else value.toFloat()
       RawDetentSpec(value = nativeValue, kind = kind, programmatic = programmatic)
     }
+    // The tallest detent bounds the content region, so its inset must be
+    // re-derived — and republished when it changed — before the detents are
+    // re-resolved against the current layout.
+    if (hasLaidOut && rawDetentSpecs.lastOrNull() != previousTallestDetent) {
+      // The content stays laid out against the previous region until Fabric
+      // commits the new inset; hold its measurement until then. Decided from
+      // the detents alone so it also holds while detached, when no geometry
+      // can be pushed.
+      isContentRegionChangePending = true
+    }
+    recomputeNativeGeometry()
     refreshDetentsFromLayout()
   }
 
@@ -440,6 +457,20 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       notifyCloseRequestStateChanged()
       return
     }
+
+    if (newIndex >= detentSpecs.size) {
+      // The resolved detents lag the raw specs while a content measurement is
+      // held (see isContentRegionChangePending): `detents` and `index` arrive
+      // in one update, so an index that only the new detents cover is retained
+      // and replayed once they resolve rather than dropped — or clamped by the
+      // deferred initial open below.
+      if (newIndex < rawDetentSpecs.size) {
+        pendingIndex = newIndex
+      }
+      return
+    }
+    // A newer request supersedes a retained one.
+    pendingIndex = null
 
     if (pendingInitialContentDetentSnap) {
       // The initial open is still deferred because the target content detent is
@@ -454,8 +485,18 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       return
     }
 
-    if (newIndex >= detentSpecs.size || newIndex == targetIndex) return
+    if (newIndex == targetIndex) return
     snapToIndex(newIndex, 0f, emitIndexChange = false)
+  }
+
+  // Applies an index that was requested before the resolved detents covered it.
+  // Runs after every detent resolution; a drag in progress keeps it waiting,
+  // and the user's snap at the end of the drag drops it.
+  private fun replayPendingIndexIfResolved() {
+    val index = pendingIndex ?: return
+    if (!hasLaidOut || isPanning || index >= detentSpecs.size) return
+    pendingIndex = null
+    setIndex(index)
   }
 
   fun setScrimColor(color: Int?) {
@@ -524,6 +565,11 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   }
 
   private fun refreshDetentsFromLayout() {
+    resolveDetentsFromLayout()
+    replayPendingIndexIfResolved()
+  }
+
+  private fun resolveDetentsFromLayout() {
     if (!isPanning) {
       activeDragRange = null
       activeDragDetentSpecs = null
@@ -640,6 +686,21 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   }
 
   private fun validContentHeight(): Float {
+    if (isContentRegionChangePending) {
+      // The content — and thus its marker — is laid out against the applied
+      // inset. Until that is the inset the current detents call for, the
+      // measurement describes the previous region and is treated as
+      // unavailable.
+      val expectedInsetDp = expectedContentRegionInsetDp()
+      if (
+        !expectedInsetDp.isFinite() ||
+          !appliedContentRegionInsetDp.isFinite() ||
+          kotlin.math.abs(appliedContentRegionInsetDp - expectedInsetDp) > 0.01f
+      ) {
+        return Float.NaN
+      }
+      isContentRegionChangePending = false
+    }
     return currentContentHeight().takeIf { it.isFinite() && it > 0f } ?: Float.NaN
   }
 
@@ -725,13 +786,16 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
     return null
   }
 
+  // The content wrapper: the surface is its sibling, so skip it and the wrapper
+  // is whatever else the sheet mounts.
+  private fun findContentView(): ViewGroup? =
+    (0 until sheetContainer.childCount)
+      .map { sheetContainer.getChildAt(it) }
+      .firstOrNull { it !== surfaceView } as? ViewGroup
+
   private fun findContentHeightMarker(): View? {
-    // The surface is a sibling of the content wrapper; skip it so the marker is
-    // always read from the content, never from the surface.
-    val contentView =
-      (0 until sheetContainer.childCount)
-        .map { sheetContainer.getChildAt(it) }
-        .firstOrNull { it !== surfaceView } as? ViewGroup ?: return null
+    // Always read the marker from the content, never from the surface.
+    val contentView = findContentView() ?: return null
     // The marker is identified by the nativeID the JS side gives it, not by
     // its position: Fabric mounts siblings sorted by zIndex, so any content
     // child with a positive zIndex lands after the marker in the wrapper.
@@ -883,13 +947,33 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
     }
 
   /**
-   * Re-derives all natively measured geometry from this view's own size, window position, and the
-   * window's top inset, then pushes it into the shadow tree: the sheet frame (consumed by the
-   * component descriptor only in overlay mode, exactly as <Modal> does) and the content region's
-   * top inset (applied as Yoga top padding in every mode, so in-flow content lays out exactly
-   * within the detent cap). Yoga thus lays the sheet subtree out against real window geometry
-   * instead of JS-provided dimensions (issue #48). In overlay mode this view fills the dialog, so
-   * its own metrics are the dialog's.
+   * The height of the content region: the Yoga box the sheet's in-flow children (the `flex: 1`
+   * content wrapper) are laid out in. It is the tallest height the sheet can reach — the tallest
+   * detent's upper bound, clamped to the cap — rather than the cap itself, so a scrollable under a
+   * fixed or percentage tallest detent is laid out against the height it can actually show instead
+   * of leaving its last rows below the screen edge. A trailing `content` detent is bounded by the
+   * cap alone: its resolved height is measured from this very region, so bounding the region by it
+   * would be circular.
+   */
+  private fun contentRegionHeightPx(capPx: Float): Float {
+    val tallest = rawDetentSpecs.lastOrNull() ?: return capPx
+    val bound =
+      when (tallest.kind) {
+        DetentKind.POINTS -> tallest.value
+        DetentKind.PERCENTAGE -> capPx * tallest.value
+        DetentKind.CONTENT -> capPx
+      }
+    return bound.coerceIn(0f, capPx)
+  }
+
+  /**
+   * Re-derives all natively measured geometry from this view's own size, window position, the
+   * window's top inset, and the tallest detent, then pushes it into the shadow tree: the sheet
+   * frame (consumed by the component descriptor only in overlay mode, exactly as <Modal> does) and
+   * the content region's inset (applied as Yoga bottom padding in every mode, so in-flow content
+   * lays out exactly within the region the sheet can show; see [contentRegionHeightPx]). Yoga thus
+   * lays the sheet subtree out against real window geometry instead of JS-provided dimensions
+   * (issue #48). In overlay mode this view fills the dialog, so its own metrics are the dialog's.
    */
   private fun recomputeNativeGeometry() {
     if (width <= 0 || height <= 0 || !isAttachedToWindow) return
@@ -909,11 +993,62 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
 
     val capChanged = cap != nativeCapPx
     nativeCapPx = cap
-    pushGeometryState(width, height, height - cap)
+    pushGeometryState(width, height, height - contentRegionHeightPx(cap))
     if (capChanged) {
       refreshDetentsFromLayout()
       requestLayout()
     }
+  }
+
+  // The content region height (px) a detents change moved the layout to, while
+  // Fabric has yet to lay the content out against it. Resolving a `content`
+  // detent from the stale measurement could trip the ascending-order check: a
+  // filling scrollable measured in a 300dp region cannot sit above a 500dp
+  // detent that the same update introduced. NaN when nothing is pending.
+  private var isContentRegionChangePending = false
+
+  // The content-region inset (dp) of the state Fabric last committed, recorded
+  // mid-batch. NaN before the first commit.
+  private var committedContentRegionInsetDp = Float.NaN
+
+  // The committed inset once its mount batch has completed, so the content —
+  // and its marker — is laid out against it. Only this value vouches for a
+  // content measurement: mid-batch, the children may not have been re-measured
+  // yet. NaN before the first batch completes.
+  private var appliedContentRegionInsetDp = Float.NaN
+
+  // The content-region inset (dp) the current detents and cap call for: what
+  // recomputeNativeGeometry pushes, computable even while detached.
+  private fun expectedContentRegionInsetDp(): Float {
+    if (height <= 0) return Float.NaN
+    return (height - contentRegionHeightPx(resolvedMaxDetentHeight())) / density
+  }
+
+  private val contentRegionCommitPass = Runnable {
+    appliedContentRegionInsetDp = committedContentRegionInsetDp
+    // needsCustomLayoutForChildren: Fabric only re-measured the children, so
+    // give the content wrapper its fresh measured bounds — Android hit-testing
+    // is bounds-based, and a wrapper still sized to a shorter region would make
+    // the content laid out below it untouchable. Then re-resolve any `content`
+    // detent that was waiting for the fresh measurement.
+    if (width > 0 && height > 0) {
+      layoutSheetContainer(width, height)
+    }
+    refreshDetentsFromLayout()
+  }
+
+  /**
+   * Records the content-region inset of a state Fabric committed. The content wrapper is
+   * re-measured in the same mount batch, so once the batch completes its measured size and the
+   * content marker reflect that inset: the posted pass then marks the inset applied, places the
+   * children at their new sizes, and re-resolves the detents.
+   */
+  fun onContentRegionStateCommitted(insetDp: Double) {
+    val inset = insetDp.toFloat()
+    if (inset == committedContentRegionInsetDp) return
+    committedContentRegionInsetDp = inset
+    removeCallbacks(contentRegionCommitPass)
+    post(contentRegionCommitPass)
   }
 
   private fun pushGeometryState(widthPx: Int, heightPx: Int, insetTopPx: Float) {
@@ -984,6 +1119,10 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
     preserveScrimPin: Boolean = false,
   ) {
     if (index < 0 || index >= detentSpecs.size) return
+    if (emitIndexChange) {
+      // A user-driven snap supersedes an index retained from props.
+      pendingIndex = null
+    }
     targetIndex = index
     if (!isTargetingClosedDetent) {
       suppressScrimForClosingTarget = false
@@ -1286,6 +1425,8 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
 
   private fun beginPan(event: MotionEvent) {
     isPanning = true
+    // The user takes control: drop any index retained from props.
+    pendingIndex = null
     scrimPinnedFull = false
     panStartingIndex = targetIndex
     val dragDetentSpecs = detentSpecs.toList()
@@ -1305,6 +1446,8 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   private fun beginNestedPanIfNeeded() {
     if (isPanning) return
     isPanning = true
+    // The user takes control: drop any index retained from props.
+    pendingIndex = null
     scrimPinnedFull = false
     panStartingIndex = targetIndex
     val dragDetentSpecs = detentSpecs.toList()
@@ -1747,6 +1890,10 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
     lastGeometryStateWidth = 0
     lastGeometryStateHeight = 0
     lastGeometryStateInsetTop = Float.NaN
+    isContentRegionChangePending = false
+    committedContentRegionInsetDp = Float.NaN
+    appliedContentRegionInsetDp = Float.NaN
+    removeCallbacks(contentRegionCommitPass)
     clearPendingInitialContentDetentSnap()
     contentHeightMarker?.removeOnLayoutChangeListener(contentHeightMarkerLayoutListener)
     contentHeightMarker = null
