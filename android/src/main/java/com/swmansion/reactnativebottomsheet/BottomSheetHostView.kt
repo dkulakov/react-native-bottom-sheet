@@ -89,11 +89,17 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       if (value == null) {
         lastSentStateSnapshot = null
       } else {
-        // The wrapper carries the state Fabric just committed, i.e. the
-        // content-region inset the content is now laid out against.
+        // The wrapper carries the state Fabric just committed: the frame size
+        // and content-region inset the content is now laid out against.
         value.stateData
           ?.takeIf { it.hasKey("contentRegionInset") }
-          ?.let { onContentRegionStateCommitted(it.getDouble("contentRegionInset")) }
+          ?.let {
+            onStateCommitted(
+              frameWidthDp = it.getDouble("frameWidth"),
+              frameHeightDp = it.getDouble("frameHeight"),
+              contentRegionInsetDp = it.getDouble("contentRegionInset"),
+            )
+          }
         pushStateSnapshot()
         recomputeNativeGeometry()
       }
@@ -1011,6 +1017,13 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   // mid-batch. NaN before the first commit.
   private var committedContentRegionInsetDp = Float.NaN
 
+  // The frame size (dp) of the state Fabric last committed, recorded mid-batch.
+  // In native-overlay mode the sheet node is sized from this state, so a commit
+  // that carries a new frame is one that re-measured the content against it.
+  // NaN before the first commit.
+  private var committedFrameWidthDp = Float.NaN
+  private var committedFrameHeightDp = Float.NaN
+
   // The committed inset once its mount batch has completed, so the content —
   // and its marker — is laid out against it. Only this value vouches for a
   // content measurement: mid-batch, the children may not have been re-measured
@@ -1038,15 +1051,32 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   }
 
   /**
-   * Records the content-region inset of a state Fabric committed. The content wrapper is
-   * re-measured in the same mount batch, so once the batch completes its measured size and the
-   * content marker reflect that inset: the posted pass then marks the inset applied, places the
-   * children at their new sizes, and re-resolves the detents.
+   * Records the state Fabric committed: the sheet's frame size and the content-region inset. The
+   * content wrapper is re-measured in the same mount batch whenever either changed (the inset is
+   * its Yoga padding; in native-overlay mode the sheet node is sized from the frame), so once the
+   * batch completes its measured size and the content marker reflect the new state: the posted pass
+   * then marks the inset applied, places the children at their new sizes, and re-resolves the
+   * detents.
+   *
+   * The frame counts on its own because a rotation can leave the inset unchanged: the overlay
+   * window resizes first, the host's own layout places the content against its old measure, and
+   * only this commit's batch re-measures it. Without a pass after that batch the content keeps its
+   * pre-rotation frame, and Android hit-testing ignores everything laid out past it.
    */
-  fun onContentRegionStateCommitted(insetDp: Double) {
-    val inset = insetDp.toFloat()
-    if (inset == committedContentRegionInsetDp) return
+  fun onStateCommitted(frameWidthDp: Double, frameHeightDp: Double, contentRegionInsetDp: Double) {
+    val inset = contentRegionInsetDp.toFloat()
+    val frameWidth = frameWidthDp.toFloat()
+    val frameHeight = frameHeightDp.toFloat()
+    if (
+      inset == committedContentRegionInsetDp &&
+        frameWidth == committedFrameWidthDp &&
+        frameHeight == committedFrameHeightDp
+    ) {
+      return
+    }
     committedContentRegionInsetDp = inset
+    committedFrameWidthDp = frameWidth
+    committedFrameHeightDp = frameHeight
     removeCallbacks(contentRegionCommitPass)
     post(contentRegionCommitPass)
   }
@@ -1892,6 +1922,8 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
     lastGeometryStateInsetTop = Float.NaN
     isContentRegionChangePending = false
     committedContentRegionInsetDp = Float.NaN
+    committedFrameWidthDp = Float.NaN
+    committedFrameHeightDp = Float.NaN
     appliedContentRegionInsetDp = Float.NaN
     removeCallbacks(contentRegionCommitPass)
     clearPendingInitialContentDetentSnap()
