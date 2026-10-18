@@ -139,6 +139,37 @@ class BottomSheetHostViewContentRegionTest {
     }
   }
 
+  // In native-overlay mode the dialog window resizes on rotation before Fabric's batch arrives: the
+  // host is laid out at the new size while the content still holds its old measure, and the batch
+  // that then re-measures the content is the one that commits the new frame size. A content detent
+  // keeps the content-region inset at zero in both orientations, so only the committed frame size
+  // can tell the host the content was re-measured.
+  @Test
+  fun `rotating the overlay places the content once Fabric commits the new frame size`() {
+    withSheet(listOf(points(0.0), content())) { sheet ->
+      val content = RegionContentView(sheet.context)
+      sheet.addSheetChild(content, 0)
+      content.applyFabricMeasure(WIDTH_PX, HEIGHT_PX, fillsRegion = true)
+      layout(sheet)
+      sheet.stateWrapper = InsetRecordingStateWrapper()
+      sheet.commitState(WIDTH_PX, HEIGHT_PX, insetDp = 0.0)
+
+      // The dialog root lays the host out at the landscape size. The content keeps its portrait
+      // measure, and the pass the cap change posts runs before Fabric's batch, so it changes
+      // nothing.
+      layout(sheet, HEIGHT_PX, WIDTH_PX)
+      assertEquals(WIDTH_PX, content.width)
+
+      // Fabric's batch: the content is re-measured against the new frame but never laid out, and
+      // the committed state carries the new frame size with the inset unchanged.
+      content.applyFabricMeasure(HEIGHT_PX, WIDTH_PX, fillsRegion = true)
+      sheet.commitState(HEIGHT_PX, WIDTH_PX, insetDp = 0.0)
+
+      assertEquals(HEIGHT_PX, content.width)
+      assertEquals(WIDTH_PX, content.height)
+    }
+  }
+
   @Test
   fun `reverting the detents before Fabric commits releases the content measurement`() {
     withSheet(listOf(points(0.0), points(300.0))) { sheet ->
@@ -298,7 +329,14 @@ class BottomSheetHostViewContentRegionTest {
   // content is now laid out against a region of [regionDp], i.e. a content-region inset of the
   // remaining height.
   private fun BottomSheetHostView.commitContentRegion(regionDp: Double) {
-    onContentRegionStateCommitted(HEIGHT_PX / density - regionDp)
+    commitState(WIDTH_PX, HEIGHT_PX, insetDp = HEIGHT_PX / density - regionDp)
+  }
+
+  // Stands in for Fabric committing the pushed state back and completing the mount batch: the
+  // sheet's frame is [widthPx] x [heightPx] and the content is laid out against a region inset by
+  // [insetDp].
+  private fun BottomSheetHostView.commitState(widthPx: Int, heightPx: Int, insetDp: Double) {
+    onStateCommitted(widthPx / density, heightPx / density, insetDp)
     shadowOf(Looper.getMainLooper()).idle()
   }
 
@@ -325,12 +363,16 @@ class BottomSheetHostViewContentRegionTest {
     }
   }
 
-  private fun layout(sheet: BottomSheetHostView) {
+  private fun layout(
+    sheet: BottomSheetHostView,
+    widthPx: Int = WIDTH_PX,
+    heightPx: Int = HEIGHT_PX,
+  ) {
     sheet.measure(
-      View.MeasureSpec.makeMeasureSpec(WIDTH_PX, View.MeasureSpec.EXACTLY),
-      View.MeasureSpec.makeMeasureSpec(HEIGHT_PX, View.MeasureSpec.EXACTLY),
+      View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
+      View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY),
     )
-    sheet.layout(0, 0, WIDTH_PX, HEIGHT_PX)
+    sheet.layout(0, 0, widthPx, heightPx)
     shadowOf(Looper.getMainLooper()).idle()
   }
 
