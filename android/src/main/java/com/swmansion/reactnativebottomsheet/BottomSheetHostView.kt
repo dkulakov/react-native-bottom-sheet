@@ -451,6 +451,20 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       return
     }
 
+    if (newIndex >= detentSpecs.size) {
+      // The resolved detents lag the raw specs while a content measurement is
+      // held (see isContentRegionChangePending): `detents` and `index` arrive
+      // in one update, so an index that only the new detents cover is retained
+      // and replayed once they resolve rather than dropped — or clamped by the
+      // deferred initial open below.
+      if (newIndex < rawDetentSpecs.size) {
+        pendingIndex = newIndex
+      }
+      return
+    }
+    // A newer request supersedes a retained one.
+    pendingIndex = null
+
     if (pendingInitialContentDetentSnap) {
       // The initial open is still deferred because the target content detent is
       // not measurable yet. Retarget the deferred snap so the requested index is
@@ -464,8 +478,18 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
       return
     }
 
-    if (newIndex >= detentSpecs.size || newIndex == targetIndex) return
+    if (newIndex == targetIndex) return
     snapToIndex(newIndex, 0f, emitIndexChange = false)
+  }
+
+  // Applies an index that was requested before the resolved detents covered it.
+  // Runs after every detent resolution; a drag in progress keeps it waiting,
+  // and the user's snap at the end of the drag drops it.
+  private fun replayPendingIndexIfResolved() {
+    val index = pendingIndex ?: return
+    if (!hasLaidOut || isPanning || index >= detentSpecs.size) return
+    pendingIndex = null
+    setIndex(index)
   }
 
   fun setScrimColor(color: Int?) {
@@ -534,6 +558,11 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   }
 
   private fun refreshDetentsFromLayout() {
+    resolveDetentsFromLayout()
+    replayPendingIndexIfResolved()
+  }
+
+  private fun resolveDetentsFromLayout() {
     if (!isPanning) {
       activeDragRange = null
       activeDragDetentSpecs = null
@@ -1079,6 +1108,10 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
     preserveScrimPin: Boolean = false,
   ) {
     if (index < 0 || index >= detentSpecs.size) return
+    if (emitIndexChange) {
+      // A user-driven snap supersedes an index retained from props.
+      pendingIndex = null
+    }
     targetIndex = index
     if (!isTargetingClosedDetent) {
       suppressScrimForClosingTarget = false
@@ -1381,6 +1414,8 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
 
   private fun beginPan(event: MotionEvent) {
     isPanning = true
+    // The user takes control: drop any index retained from props.
+    pendingIndex = null
     scrimPinnedFull = false
     panStartingIndex = targetIndex
     val dragDetentSpecs = detentSpecs.toList()
@@ -1400,6 +1435,8 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
   private fun beginNestedPanIfNeeded() {
     if (isPanning) return
     isPanning = true
+    // The user takes control: drop any index retained from props.
+    pendingIndex = null
     scrimPinnedFull = false
     panStartingIndex = targetIndex
     val dragDetentSpecs = detentSpecs.toList()

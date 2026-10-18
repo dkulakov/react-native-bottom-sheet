@@ -418,9 +418,19 @@ public final class BottomSheetHostingView: UIView {
       // Resolved detents intentionally stay stale while detached, but the raw
       // specs already reflect the latest props. Treat every detached index
       // update as authoritative so a later request can replace or cancel an
-      // earlier queued snap before the view is reattached.
+      // earlier queued snap — or a retained index — before the view is
+      // reattached.
+      pendingIndex = nil
       guard rawDetentSpecs.indices.contains(newIndex) else {
         pendingSnapRequest = nil
+        return
+      }
+
+      if newIndex >= detentSpecs.count {
+        // Not resolvable yet (see the attached path below); a queued snap
+        // would be dropped at flush, so retain the index instead.
+        pendingSnapRequest = nil
+        pendingIndex = newIndex
         return
       }
 
@@ -439,8 +449,31 @@ public final class BottomSheetHostingView: UIView {
       return
     }
 
-    guard newIndex < detentSpecs.count, newIndex != targetIndex else { return }
+    guard newIndex < detentSpecs.count else {
+      // The resolved detents lag the raw specs while a content measurement is
+      // held (see isContentRegionChangePending): `detents` and `index` arrive
+      // in one update, so an index that only the new detents cover is retained
+      // and replayed once they resolve rather than dropped.
+      if rawDetentSpecs.indices.contains(newIndex) {
+        pendingIndex = newIndex
+      }
+      return
+    }
+    // A newer request supersedes a retained one.
+    pendingIndex = nil
+    guard newIndex != targetIndex else { return }
     snapToIndex(newIndex, velocity: 0, emitIndexChange: false)
+  }
+
+  /// Applies an index that was requested before the resolved detents covered
+  /// it. Runs after every detent resolution; a drag in progress keeps it
+  /// waiting, and the user's snap at the end of the drag drops it.
+  private func replayPendingIndexIfResolved() {
+    guard hasLaidOut, !isPanning, let index = pendingIndex, index < detentSpecs.count else {
+      return
+    }
+    pendingIndex = nil
+    setDetentIndex(index)
   }
 
   public func mountChildComponentView(_ childView: UIView, atIndex index: Int) {
@@ -768,6 +801,10 @@ public final class BottomSheetHostingView: UIView {
     preserveScrimPin: Bool = false
   ) {
     guard index >= 0, index < detentSpecs.count else { return }
+    if emitIndexChange {
+      // A user-driven snap supersedes an index retained from props.
+      pendingIndex = nil
+    }
     if window == nil, activeSpring == nil {
       // Avoid starting a render-server animation before the layer is attached:
       // UIKit may briefly display the model transform before keyframes begin.
@@ -905,6 +942,8 @@ public final class BottomSheetHostingView: UIView {
         cancelActiveSpring()
       }
       isPanning = true
+      // The user takes control: drop any index retained from props.
+      pendingIndex = nil
       scrimPinnedFull = false
       panStartingIndex = targetIndex
       activeDragDetentSpecs = detentSpecs
@@ -1405,6 +1444,11 @@ public final class BottomSheetHostingView: UIView {
   }
 
   private func refreshDetentsFromLayout() {
+    resolveDetentsFromLayout()
+    replayPendingIndexIfResolved()
+  }
+
+  private func resolveDetentsFromLayout() {
     // While detached from a window (e.g. mid-commit, when Fabric reparents the
     // host as ancestor view flattening changes), the native detent cap is not
     // computable — its full-height fallback would register as a cap change and

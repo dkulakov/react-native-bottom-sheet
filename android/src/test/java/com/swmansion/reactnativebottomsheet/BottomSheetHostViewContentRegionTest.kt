@@ -162,6 +162,97 @@ class BottomSheetHostViewContentRegionTest {
     }
   }
 
+  // `detents` and `index` arrive in one update, index last. While the content measurement is held,
+  // the resolved detents still have the previous count, so an index that only the new detents
+  // cover must be retained and replayed once they resolve instead of being dropped.
+  @Test
+  fun `an index added with the same detents update is replayed once the region applies`() {
+    withSheet(listOf(points(0.0), content(), points(560.0))) { sheet ->
+      val listener = RecordingSheetListener()
+      sheet.listener = listener
+      val content = RegionContentView(sheet.context)
+      sheet.addSheetChild(content, 0)
+      content.markerTopPx = (300 * sheet.density).toInt()
+      content.applyFabricMeasure(WIDTH_PX, (560 * sheet.density).toInt(), fillsRegion = false)
+      layout(sheet)
+      sheet.stateWrapper = InsetRecordingStateWrapper()
+      sheet.commitContentRegion(560.0)
+      sheet.setIndex(1)
+      shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5))
+      assertEquals(300.0, listener.positions.last(), 0.5)
+
+      sheet.setDetents(listOf(points(0.0), content(), points(600.0), points(700.0)))
+      sheet.setIndex(3)
+      content.applyFabricMeasure(WIDTH_PX, (700 * sheet.density).toInt(), fillsRegion = false)
+      sheet.commitContentRegion(700.0)
+      shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5))
+      assertEquals(3, listener.settles.last())
+      assertEquals(700.0, listener.positions.last(), 0.5)
+    }
+  }
+
+  @Test
+  fun `a retained index is replayed when the content measures after the region commit`() {
+    withSheet(listOf(points(0.0), content(), points(560.0))) { sheet ->
+      val listener = RecordingSheetListener()
+      sheet.listener = listener
+      val content = RegionContentView(sheet.context)
+      sheet.addSheetChild(content, 0)
+      content.markerTopPx = (300 * sheet.density).toInt()
+      content.applyFabricMeasure(WIDTH_PX, (560 * sheet.density).toInt(), fillsRegion = false)
+      layout(sheet)
+      sheet.stateWrapper = InsetRecordingStateWrapper()
+      sheet.commitContentRegion(560.0)
+      sheet.setIndex(1)
+      shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5))
+
+      sheet.setDetents(listOf(points(0.0), content(), points(600.0), points(700.0)))
+      sheet.setIndex(3)
+      // The region commits while the content is momentarily unmeasurable (marker at 0), so the
+      // content detent cannot resolve yet; the measurement lands in a later layout pass.
+      content.moveMarker(0)
+      content.applyFabricMeasure(WIDTH_PX, (700 * sheet.density).toInt(), fillsRegion = false)
+      sheet.commitContentRegion(700.0)
+      content.moveMarker((300 * sheet.density).toInt())
+      shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5))
+      assertEquals(3, listener.settles.last())
+      assertEquals(700.0, listener.positions.last(), 0.5)
+    }
+  }
+
+  @Test
+  fun `an index added with the detents while the initial open is deferred is not clamped`() {
+    val controller = Robolectric.buildActivity(Activity::class.java).setup()
+    val sheet = BottomSheetHostView(controller.get())
+    try {
+      val listener = RecordingSheetListener()
+      sheet.listener = listener
+      sheet.animateIn = true
+      sheet.setDetents(listOf(points(0.0), content(), points(560.0)))
+      sheet.setIndex(1)
+      val content = RegionContentView(sheet.context)
+      sheet.addSheetChild(content, 0)
+      // Unmeasurable content at first layout: the initial open at the content detent is deferred.
+      content.applyFabricMeasure(WIDTH_PX, (560 * sheet.density).toInt(), fillsRegion = false)
+      controller.get().setContentView(sheet, ViewGroup.LayoutParams(WIDTH_PX, HEIGHT_PX))
+      layout(sheet)
+      sheet.stateWrapper = InsetRecordingStateWrapper()
+      sheet.commitContentRegion(560.0)
+
+      sheet.setDetents(listOf(points(0.0), content(), points(600.0), points(700.0)))
+      sheet.setIndex(3)
+      content.applyFabricMeasure(WIDTH_PX, (700 * sheet.density).toInt(), fillsRegion = false)
+      sheet.commitContentRegion(700.0)
+      content.moveMarker((300 * sheet.density).toInt())
+      shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5))
+      assertEquals(3, listener.settles.last())
+      assertEquals(700.0, listener.positions.last(), 0.5)
+    } finally {
+      sheet.destroy()
+      controller.close()
+    }
+  }
+
   @Test
   fun `content detent re-resolves once Fabric applies the changed content region`() {
     withSheet(listOf(points(0.0), content(), points(560.0))) { sheet ->
@@ -286,6 +377,12 @@ private class RegionContentView(context: Context) : ViewGroup(context) {
       MeasureSpec.makeMeasureSpec(widthPx, MeasureSpec.EXACTLY),
       MeasureSpec.makeMeasureSpec(heightPx, MeasureSpec.EXACTLY),
     )
+  }
+
+  // Fabric re-laying the marker out on its own, as it does when the content above it changes.
+  fun moveMarker(topPx: Int) {
+    markerTopPx = topPx
+    marker.layout(0, topPx, 1, topPx + 1)
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
