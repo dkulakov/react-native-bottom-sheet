@@ -2070,7 +2070,7 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context), NestedScr
 
   companion object {
     // The `nativeID` the JS side gives the zero-height marker it appends to
-    // the content wrapper. Mirrored in `BottomSheet.tsx` and
+    // the content wrapper. Mirrored in `bottomSheetUtils.ts` and
     // `BottomSheetHostingView.swift`; keep the three in sync.
     const val CONTENT_HEIGHT_MARKER_NATIVE_ID = "swm-bottom-sheet-content-height-marker"
 

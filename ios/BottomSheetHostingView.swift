@@ -189,7 +189,7 @@ public final class BottomSheetHostingView: UIView {
   private var scrollViewOwnsLowerBoundary = false
   private var isContentInteractionDisabled = false
   // The `nativeID` the JS side gives the zero-height marker it appends to the
-  // content wrapper. Mirrored in `BottomSheet.tsx` and `BottomSheetHostView.kt`;
+  // content wrapper. Mirrored in `bottomSheetUtils.ts` and `BottomSheetHostView.kt`;
   // keep the three in sync.
   private static let contentHeightMarkerNativeID = "swm-bottom-sheet-content-height-marker"
   private var contentHeightMarker: UIView?

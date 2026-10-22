@@ -68,7 +68,7 @@ To keep the scrim deepening across every detent, pass one value per detent:
 
 ## Android close requests
 
-`onCloseRequest` is **Android only**. Android system Back, a committed
+`onCloseRequest` is **Android and web only**. Android system Back, a committed
 predictive Back gesture, and a complete, unmodified physical-keyboard Escape
 press use the same close request callback. The callback reports the request but
 does not change the controlled `index`, choose a detent, or dismiss the sheet.
@@ -157,7 +157,8 @@ as a native modal (for example, a React Navigation native-stack screen with
 Set `nativeOverlay` to present the sheet in a native overlay above
 everything—including native modal screens—so it always covers the full window.
 On iOS, a `UIWindow`-attached container is used; on Android, a full-screen,
-edge-to-edge, transparent dialog.
+edge-to-edge, transparent dialog; on the web, a fixed-position layer in
+`document.body`.
 
 ```tsx
 <ModalBottomSheet
