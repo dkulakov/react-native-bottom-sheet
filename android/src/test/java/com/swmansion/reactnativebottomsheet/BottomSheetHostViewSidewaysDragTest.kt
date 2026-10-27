@@ -257,6 +257,11 @@ class BottomSheetHostViewSidewaysDragTest {
       block(sheet, content)
     } finally {
       sheet.destroy()
+      // Cancelling the handoff's settling spring leaves a null callback in
+      // AndroidX's thread-local AnimationHandler until its next frame. Drain
+      // that frame before Robolectric resets the looper, or a later test's
+      // spring can wait forever for the discarded callback.
+      shadowOf(Looper.getMainLooper()).idle()
       controller.close()
     }
   }
