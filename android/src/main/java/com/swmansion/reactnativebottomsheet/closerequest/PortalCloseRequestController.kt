@@ -28,6 +28,7 @@ internal class PortalCloseRequestController(
   private var backDispatcher: OnBackPressedDispatcher? = null
 
   private var backCallback: CloseRequestBackCallback? = null
+  private var legacyBackKeyRegistration: LegacyBackKeyRouting.Registration? = null
 
   private val lifecycleObserver: LifecycleEventObserver =
     LifecycleEventObserver { lifecycleOwner, event ->
@@ -256,6 +257,10 @@ internal class PortalCloseRequestController(
         backCallback = newCallback
         hasBackCallbackPresentationEnded = false
         dispatcher.addCallback(newCallback)
+        legacyBackKeyRegistration =
+          (currentRoutingContext?.dispatcherOwner as? Activity)?.window?.let { window ->
+            LegacyBackKeyRouting.register(window, dispatcher, newCallback)
+          }
         newCallback.updateState(
           canReceiveBack = assignedCloseRequestAction != CloseRequestInputAction.PASS_THROUGH,
           currentAction = assignedCloseRequestAction,
@@ -305,6 +310,8 @@ internal class PortalCloseRequestController(
     val callback = backCallback
     backCallback = null
     backDispatcher = null
+    legacyBackKeyRegistration?.remove()
+    legacyBackKeyRegistration = null
     hasBackCallbackPresentationEnded = false
     callback?.dispose()
     callback?.remove()
