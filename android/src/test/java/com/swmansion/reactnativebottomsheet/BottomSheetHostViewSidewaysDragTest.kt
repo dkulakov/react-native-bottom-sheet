@@ -10,8 +10,10 @@ import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.facebook.react.internal.featureflags.ReactNativeFeatureFlagsForTests
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -53,6 +55,75 @@ class BottomSheetHostViewSidewaysDragTest {
       layout(sheet, content)
 
       assertTrue(sheet.interceptsDrag(dx = 0f, dy = 60f))
+    }
+  }
+
+  @Test
+  fun `a sideways start then vertical movement is intercepted in the initial direction`() {
+    for (dy in listOf(-60f, 60f)) {
+      withSheet { sheet, content ->
+        // Keep the opposite direction in handoff mode so a nested target is
+        // prepared, as it is with the default expand-handoff/collapse-initial pair.
+        sheet.scrollableExpandNegotiation = if (dy < 0) 1 else 2
+        sheet.scrollableCollapseNegotiation = if (dy > 0) 1 else 2
+        content.addView(tallScrollView(sheet.context))
+        layout(sheet, content)
+
+        assertEquals(
+          "initial negotiation, dy=$dy",
+          listOf(false, true),
+          sheet.interceptsMoves(-120f to 0f, -120f to dy),
+        )
+      }
+    }
+  }
+
+  @Test
+  fun `a sideways start then vertical movement stays with content in the none direction`() {
+    for (dy in listOf(-60f, 60f)) {
+      withSheet { sheet, content ->
+        sheet.scrollableExpandNegotiation = if (dy < 0) 0 else 1
+        sheet.scrollableCollapseNegotiation = if (dy > 0) 0 else 1
+        content.addView(tallScrollView(sheet.context))
+        layout(sheet, content)
+
+        assertEquals(
+          "none negotiation, dy=$dy",
+          listOf(false, false),
+          sheet.interceptsMoves(-120f to 0f, -120f to dy),
+        )
+      }
+    }
+  }
+
+  @Test
+  fun `a sideways start then vertical movement uses nested scrolling in the handoff direction`() {
+    for (dy in listOf(-60f, 60f)) {
+      withSheet { sheet, content ->
+        sheet.scrollableExpandNegotiation = if (dy < 0) 2 else 1
+        sheet.scrollableCollapseNegotiation = if (dy > 0) 2 else 1
+        val list = tallScrollView(sheet.context)
+        content.addView(list)
+        layout(sheet, content)
+
+        assertEquals(
+          "handoff negotiation, dy=$dy",
+          listOf(false, false),
+          sheet.interceptsMoves(-120f to 0f, -120f to dy),
+        )
+
+        // The child retains the touch stream, but its vertical scroll still
+        // moves the sheet through the nested-scrolling parent callbacks.
+        val axes = ViewCompat.SCROLL_AXIS_VERTICAL
+        val type = ViewCompat.TYPE_TOUCH
+        assertTrue(sheet.onStartNestedScroll(content, list, axes, type))
+        sheet.onNestedScrollAccepted(content, list, axes, type)
+        val consumed = IntArray(2)
+        val scrollDy = -dy.toInt()
+        sheet.onNestedPreScroll(list, 0, scrollDy, consumed, type)
+        assertEquals("handoff consumption, dy=$dy", scrollDy, consumed[1])
+        sheet.onStopNestedScroll(list, type)
+      }
     }
   }
 
@@ -119,21 +190,38 @@ class BottomSheetHostViewSidewaysDragTest {
     }
   }
 
-  // Presses on the sheet 100dp above the bottom edge, then moves once by (dx, dy)
-  // px and reports whether the sheet intercepts that move.
-  private fun BottomSheetHostView.interceptsDrag(dx: Float, dy: Float): Boolean {
+  private fun BottomSheetHostView.interceptsDrag(dx: Float, dy: Float): Boolean =
+    interceptsMoves(dx to dy).single()
+
+  // Presses on the sheet 100dp above the bottom edge, then sends moves whose
+  // offsets are in px from touch-down. Reports interception for each move.
+  private fun BottomSheetHostView.interceptsMoves(
+    vararg offsets: Pair<Float, Float>,
+  ): List<Boolean> {
     val x = WIDTH_PX / 2f
     val y = HEIGHT_PX - 100f * resources.displayMetrics.density
     val downTime = 1_000L
     val down = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0)
-    val move =
-      MotionEvent.obtain(downTime, downTime + 50, MotionEvent.ACTION_MOVE, x + dx, y + dy, 0)
     try {
       onInterceptTouchEvent(down)
-      return onInterceptTouchEvent(move)
     } finally {
       down.recycle()
-      move.recycle()
+    }
+    return offsets.mapIndexed { index, (dx, dy) ->
+      val move =
+        MotionEvent.obtain(
+          downTime,
+          downTime + 50L * (index + 1),
+          MotionEvent.ACTION_MOVE,
+          x + dx,
+          y + dy,
+          0,
+        )
+      try {
+        onInterceptTouchEvent(move)
+      } finally {
+        move.recycle()
+      }
     }
   }
 

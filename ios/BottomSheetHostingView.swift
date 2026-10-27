@@ -79,9 +79,8 @@ private final class SheetPanGestureRecognizer: UIPanGestureRecognizer {
   /// UIKit's pan recognizers apply to total travel.
   private static let verticalSlop: CGFloat = 10
 
-  /// The vertical scrollables a sideways start defers to, set by the host as
-  /// the touch lands. Empty disables the hold.
-  var deferredScrollViews: [UIScrollView] = []
+  /// The vertical scrollables a sideways start defers to. Empty disables the hold.
+  private var deferredScrollViews: [UIScrollView] = []
   private var hold = Hold.none
   private var initialLocation: CGPoint?
 
@@ -101,11 +100,18 @@ private final class SheetPanGestureRecognizer: UIPanGestureRecognizer {
     }
   }
 
+  /// Arms the hold for a first touch, deferring to `scrollViews`. Called by the
+  /// host from `gestureRecognizer(_:shouldReceive:)`, before UIKit delivers the
+  /// touch, so `isHoldingSidewaysStart` is already settled whenever UIKit asks
+  /// for failure requirements.
+  func prepareHold(for touch: UITouch, deferringTo scrollViews: [UIScrollView]) {
+    deferredScrollViews = scrollViews
+    initialLocation = touch.location(in: view)
+    hold = scrollViews.isEmpty ? .none : .active
+  }
+
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
-    if numberOfTouches == 0, touches.count == 1, let touch = touches.first, !deferredScrollViews.isEmpty {
-      initialLocation = touch.location(in: view)
-      hold = .active
-    } else if hold == .active {
+    if hold == .active, numberOfTouches + touches.count > 1 {
       // Only a single finger is held.
       hold = .none
     }
@@ -1856,7 +1862,7 @@ extension BottomSheetHostingView: UIGestureRecognizerDelegate {
     if gestureRecognizer === panGesture, panGesture.numberOfTouches == 0 {
       let location = touch.location(in: sheetContainer)
       initialTouchLocation = location
-      panGesture.deferredScrollViews = sidewaysDeferralScrollViews(at: location)
+      panGesture.prepareHold(for: touch, deferringTo: sidewaysDeferralScrollViews(at: location))
     }
     return true
   }
@@ -1878,6 +1884,14 @@ extension BottomSheetHostingView: UIGestureRecognizerDelegate {
     // pan, the held pan therefore also yields a vertical start to a pan above
     // it whose own threshold is below the slop. Pans inside the sheet disable
     // the hold instead.
+    //
+    // Apple documents one query per recognition attempt. Its timing relative
+    // to touch delivery is observed, not documented: on iOS 27, UIKit asks
+    // right after `touchesBegan`, before movement. The hold is armed earlier,
+    // in `gestureRecognizer(_:shouldReceive:)`, so the exemption also applies
+    // if UIKit asks before delivering the touch. If a future release asks
+    // after the hold has been released, the exemption would no longer apply.
+    // Recheck this timing with each major iOS release.
     if
       panGesture.isHoldingSidewaysStart,
       other is UIPanGestureRecognizer,
